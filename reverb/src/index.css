@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #2a3a54  ;
+}
+
+.channel-large {
+  flex: 1;
+}
+
+.channel-small {
+  flex: 0.7;
+}
+
+.server-members {
+  flex: 0.3;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.IoMdArrowDropdown {
+  transition: transform 0.3s ease-in-out;
+}
