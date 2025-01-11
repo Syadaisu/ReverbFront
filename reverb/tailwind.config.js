@@ -14,6 +14,7 @@ module.exports = {
           tertiary: "#1c2e4a",
           main: '#141a31',
           second: '#252b41',
+          mp: '#150c25'
         },
       },
     },

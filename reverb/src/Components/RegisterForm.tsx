@@ -67,14 +67,15 @@ const RegisterForm = () => {
             setErrMsg("Not all data is valid.");
             return;
         }
-        try {/*
+        try {
             await registerUser(username, email, password, repeatPassword);
             setSuccess(true);
             // clear input fields
             setEmail("");
             setUsername("");
             setPassword("");
-            setRepeatPassword("");*/
+            setRepeatPassword("");
+            console.log("Register successful!");
         } catch (error: any) {
             if (!error?.response) {
                 setErrMsg("No server response. Please try again later.");
@@ -91,8 +92,8 @@ const RegisterForm = () => {
     return (
         <>
             {success ? (
-                <div className=' w-full h-full bg-gradient-to-r from-main to-second bg-cover flex justify-center items-center min-h-screen min-w-screen'>
-                    <div className='w-[28rem] bg-transparent backdrop-blur-xl text-white rounded-lg pt-7 pb-7 pl-10 pr-10 border-2 border-solid border-slate-600'>
+                <div className=' w-full h-full bg-gradient-to-r from-mp to-main bg-cover flex justify-center items-center min-h-screen min-w-screen'>
+                    <div className='w-[28rem] bg-mp backdrop-blur-xl text-white rounded-lg pt-7 pb-7 pl-10 pr-10 border-2 border-solid border-slate-600'>
                         <h1 className='text-4xl	text-center font-semibold'>
                             Success!
                         </h1>
@@ -111,8 +112,8 @@ const RegisterForm = () => {
                     </Routes>
                 </div>
             ) : (
-                <div className=' w-full h-full bg-gradient-to-r from-main to-second bg-cover flex justify-center items-center min-h-screen min-w-screen'>
-                    <div className='w-[26rem] bg-transparent backdrop-blur-xl text-white rounded-lg pt-7 pb-7 pl-10 pr-10 border-2 border-solid border-slate-600'>
+                <div className=' w-full h-full bg-gradient-to-r from-mp to-main bg-cover flex justify-center items-center min-h-screen min-w-screen'>
+                    <div className='w-[26rem] bg-mp backdrop-blur-xl text-white rounded-lg pt-7 pb-7 pl-10 pr-10 border-2 border-solid border-slate-600'>
                         <form onSubmit={handleSubmit}>
                             <h1 className='text-4xl	text-center font-semibold'>
                                 Register
@@ -141,7 +142,6 @@ const RegisterForm = () => {
                                     }>
                                     Must be a valid e-mail address.
                                 </p>
-                                <FaEnvelope  />
                             </div>
                             <div className='relative w-full h-12 mt-7'>
                                 <input
@@ -169,7 +169,6 @@ const RegisterForm = () => {
                                     <br />
                                     Letters, numbers, underscores, hyphens allowed.
                                 </p>
-                                <FaUser  />
                             </div>
                             <div className='relative w-full h-12 mt-7'>
                                 <input
@@ -205,9 +204,6 @@ const RegisterForm = () => {
                                     <span aria-label='dollar sign'>$</span>{" "}
                                     <span aria-label='percent'>%</span>
                                 </p>
-                                <FaEye
-                                    
-                                />
                             </div>
                             <div className='relative w-full h-12 mt-7'>
                                 <input
@@ -235,13 +231,12 @@ const RegisterForm = () => {
                                     }>
                                     Must match the password above.
                                 </p>
-                                <FaLock />
                             </div>
                             <br />
                             <button
                                 disabled={!validEmail || !validUsername || !validPassword || !validRepeatPassword ? true : false}
                                 type='submit'
-                                className='btn w-full h-11 bg-white border-none outline-none rounded-s-3xl rounded-e-3xl shadow cursor-pointer text-base text-slate-800 font-bold disabled:bg-slate-500'>
+                                className='btn w-full h-11 bg-white border-none outline-none rounded-s-3xl rounded-e-3xl shadow cursor-pointer text-base text-slate-800 font-bold'>
                                 Register
                             </button>
 
