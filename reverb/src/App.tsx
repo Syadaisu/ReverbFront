@@ -2,6 +2,8 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/RegisterPage";
 import MainPage from "./Pages/MainPage";
+import Home from "./Components/Home";
+import ServerView from "./Components/ServerView";
 
 
 function App() {
@@ -9,8 +11,9 @@ function App() {
       <Routes>
           <Route path='login/*' element={<LoginPage />} />
           <Route path='register/*' element={<RegisterPage />} />
-          <Route path='home/*' element={<MainPage />} />
+          <Route path='home/*' element={<Home />} />
           <Route path='*' element={<Navigate to='/login' replace />} />
+          <Route path="server/:serverId/*" element={<ServerView />} />
       </Routes>
   );
 }

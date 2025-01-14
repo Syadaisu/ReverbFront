@@ -37,6 +37,7 @@ const LoginForm = () => {
           const avatar = user?.avatar;
       
           // If you want to store them in a single object:
+          console.log(user.userId, user.userName, user.email, user.creationDate, user.avatar);
           setAuth({ id, username, email, accessToken, avatar });
           localStorage.setItem(
             "auth",

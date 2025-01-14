@@ -40,6 +40,15 @@ export interface MessageProps {
   timestamp: string;
 }
 
+export interface ServerProps {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  memberIds: string[];
+  channelIds: string[];
+}
+
 export const useStomp = () => {
   const [connected, setConnected] = useState(false);
   const stompClientRef = useRef<Client | null>(null);
@@ -121,6 +130,10 @@ export const useStomp = () => {
     publish("/app/createChannel", { serverId, name, description });
   };
 
+  const createServer = (name: string, description?: string) => {
+    publish("/app/createServer", { name, description });
+  };
+
   const editChannel = (channelId: string, name: string, description?: string) => {
     publish("/app/editChannel", { channelId, name, description });
   };
@@ -141,6 +154,14 @@ export const useStomp = () => {
       callback(body);
     });
   };
+
+  const onServerCreated = (callback: (event: ServerProps) => void) => {
+    const destination = "/topic/server.created";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body) as ServerProps;
+      callback(body);
+    });
+  }
 
   const onChannelCreated = (serverId: string, callback: (event: ChannelCreatedEvent) => void) => {
     const destination = `/topic/server.${serverId}.channel.created`;
@@ -178,10 +199,12 @@ export const useStomp = () => {
     connected,
     joinServer,
     createChannel,
+    createServer,
     editChannel,
     deleteChannel,
     sendMessage,
     onServerJoined,
+    onServerCreated,
     onChannelCreated,
     onChannelEdited,
     onChannelDeleted,
