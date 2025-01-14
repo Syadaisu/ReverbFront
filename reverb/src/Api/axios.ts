@@ -5,6 +5,8 @@ const REGISTER_URL = '/account/register';
 const LOGIN_URL = '/account/login';
 const GET_CHANNELS = '/channel/getByServer/'
 const GET_SERVERS = '/server/getByUser/'
+const GET_USERBYEMAIL = '/user/getByEmail/'
+const GET_USERSERVERS = '/server/getByUser/'
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -40,6 +42,19 @@ export const loginUser = async (email: string, password: string) => {
     return response;
 };
 
+export const getUserServers = async (token: string, userId: string) => {
+    const response = await axios.get(
+        BASE_URL+GET_USERSERVERS+userId,
+        {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        },
+    );
+    return response;
+}
+
 export const getServer = async (token: string, serverId: string) => {
     const response = await axios.get(
         BASE_URL+GET_SERVERS+serverId,
@@ -56,6 +71,19 @@ export const getServer = async (token: string, serverId: string) => {
 export const getChannels = async (token: string, channelId: string) => {
     const response = await axios.get(
         BASE_URL+GET_CHANNELS+channelId,
+        {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        },
+    );
+    return response;
+};
+
+export const getUserByEmail = async (token: string, email: string) => {
+    const response = await axios.get(
+        BASE_URL+GET_USERBYEMAIL+email,
         {
             headers: { 
                 'Content-Type': 'application/json',

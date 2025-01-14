@@ -130,8 +130,8 @@ export const useStomp = () => {
     publish("/app/createChannel", { serverId, name, description });
   };
 
-  const createServer = (name: string, description?: string) => {
-    publish("/app/createServer", { name, description });
+  const createServer = (name: string, ownerId: number, description?: string, ) => {
+    publish("/app/createServer", { name, description, ownerId });
   };
 
   const editChannel = (channelId: string, name: string, description?: string) => {

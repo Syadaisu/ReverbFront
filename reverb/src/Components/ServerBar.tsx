@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ServerButton, IconButton } from "./IconLib";
 import { useStompContext } from "../Hooks/useStompContext";
-import { getServer } from "../Api/axios"; // your REST helper
+import { getUserServers } from "../Api/axios"; // your REST helper
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
 
@@ -24,16 +24,41 @@ const ServerBar = () => {
   // 1) On mount, fetch the servers via REST
   useEffect(() => {
     // Suppose the `auth.id` is the user’s ID
-    if (!auth?.token) return;
+    console.log("useEffect for fetching servers triggered");
+    console.log("Auth object:", auth);
+    if (!auth?.accessToken) {
+      console.log("No auth.token, skipping fetch");
+      return;
+    }
     
     // The endpoint getServer() calls /server/getByUser/{serverId}
     // but in your snippet, it's a bit confusing naming.
     // Let's assume you want to pass the *userId* instead of "serverId" 
     // because /server/getByUser/ typically expects userId.
-    getServer(auth.token, auth.id) 
+    getUserServers(auth.accessToken, auth.id)
       .then((resp) => {
-        // resp.data might be an array of servers if your API returns that
-        setServers(resp.data); 
+        console.log("Servers loaded:", resp.data);
+
+        if (!Array.isArray(resp.data)) {
+          console.error("Expected resp.data to be an array, but it's not:", resp.data);
+          return;
+        }
+        // Transform the response data to match ServerData interface
+        const transformedServers: ServerData[] = resp.data.map((srv: any) => {
+          if (!srv.serverId || !srv.serverName) {
+            console.warn("Incomplete server data:", srv);
+            return null; // or handle as per your requirement
+          }
+
+          return {
+            id: srv.serverId.toString(),           // Convert number to string
+            name: srv.serverName,           // Map serverName to name
+            description: srv.description,    // Direct mapping
+          };
+        }).filter((srv: ServerData | null) => srv !== null) as ServerData[]; // Remove nulls
+
+        console.log("Transformed servers:", transformedServers);
+        setServers(transformedServers);
       })
       .catch((error) => {
         console.error("Failed to load servers", error);
@@ -53,7 +78,7 @@ const ServerBar = () => {
   // 3) “Create Server” method
   const handleCreateServer = () => {
     if (!newName) return;
-    stomp.createServer(newName, newDesc);
+    stomp.createServer(newName, auth.id, newDesc);
     setNewName("");
     setNewDesc("");
     setShowCreateServer(false);
