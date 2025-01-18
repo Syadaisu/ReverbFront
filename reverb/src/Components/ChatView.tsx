@@ -14,7 +14,6 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const { auth } = useAuth(); 
   const stomp = useStomp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [inputValue, setInputValue] = useState("");
 
@@ -44,19 +43,28 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   useEffect(() => {
     if (!stomp || !stomp.connected) return;
     if (!channelId) return;
+  
+    console.log("Subscribe once for channel:", channelId);
+    const sub = stomp.onMessageSent(serverId, channelId, (evt) => {
+      console.log("Received event from STOMP:", evt);
+      // If 'evt' is undefined or if 'evt.message' is undefined, you'll see it in the console
+      if (!evt) {
+        console.warn("No 'message' field in event!", evt);
+        return; // skip updating the array
+      }
 
-    console.log(`Subscribing to messages for channel: ${channelId}`);
-    const sub = stomp.onMessageSent(serverId, channelId, (event: any) => {
-      // event => { message: MessageProps }
-      console.log("Received realtime message:", event.message);
-      setMessages((prev) => [...prev, event.message]);
+      setMessages(prev => [...prev, evt]);
     });
-
+  
     return () => {
-      console.log(`Unsubscribing from channelId=${channelId} messages`);
+      console.log("Unsubscribe from channel:", channelId);
       sub?.unsubscribe();
     };
-  }, [stomp, serverId, channelId]);
+  }, [
+    stomp?.connected,   // track connected boolean
+    channelId, 
+    serverId
+  ]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,9 +116,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
           placeholder="Type a message..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
-          }}
+          
         />
         <button
           onClick={handleSend}

@@ -34,7 +34,7 @@ const LoginForm = () => {
           // Now extract the fields from user
           const userId = user?.userId;
           const username = user?.userName;
-          const avatar = user?.avatar;
+          const avatar = user?.avatarUuid;
       
           // If you want to store them in a single object:
           console.log(user.userId, user.userName, user.email, user.creationDate, user.avatar);

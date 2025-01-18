@@ -21,9 +21,6 @@ interface ChannelDeletedEvent {
   channelId: string;
 }
 
-interface MessageSentEvent {
-  message: MessageProps;
-}
 
 export interface ChannelProps {
   id: string;
@@ -34,11 +31,11 @@ export interface ChannelProps {
 
 export interface MessageProps {
   id: string;
-  serverId: string;
   channelId: string;
   authorId: string;
   body: string;
   timestamp: string;
+  attachment?: "";
 }
 
 export interface ServerProps {
@@ -150,8 +147,15 @@ export const useStomp = () => {
   };
 
   const sendMessage = (channelId: number, authorId: number, body: string) => {
-    console.log ("Sending message channel:", channelId, "author:", authorId, "body:", body);
-    publish("/app/addMessage", { channelId, authorId, body, responseToId: "", responseTo: "", attachment: 0 });
+    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body);
+    publish("/app/addMessage", {
+      channelId,
+      authorId,
+      body,
+      responseToId: "",
+      responseTo: "",
+      attachment: 0,
+    });
   };
 
   // Define subscribe methods
@@ -195,10 +199,11 @@ export const useStomp = () => {
     });
   };
 
-  const onMessageSent = (serverId: string, channelId: number, callback: (event: MessageSentEvent) => void) => {
-    const destination = `/topic/server.${serverId}.channel.${channelId}.message.added`;
+  const onMessageSent = (serverId: string, channelId: number, callback: (event: MessageProps) => void) => {
+    const destination = `/topic/channel.${channelId}.message.added`;
+    console.log("Subscribing to:", destination);
     return subscribe(destination, (msg) => {
-      const body = JSON.parse(msg.body) as MessageSentEvent;
+      const body = JSON.parse(msg.body) as MessageProps;
       callback(body);
     });
   };
