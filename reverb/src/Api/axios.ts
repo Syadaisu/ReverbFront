@@ -7,6 +7,7 @@ const GET_CHANNELS = '/channel/getByServer/'
 const GET_SERVERS = '/server/getByUser/'
 const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
+const GET_CHANNELMESSAGES = '/message/getByChannel/'
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -42,7 +43,7 @@ export const loginUser = async (email: string, password: string) => {
     return response;
 };
 
-export const getUserServers = async (token: string, userId: string) => {
+export const getUserServers = async (token: string, userId: number) => {
     const response = await axios.get(
         BASE_URL+GET_USERSERVERS+userId,
         {
@@ -93,3 +94,16 @@ export const getUserByEmail = async (token: string, email: string) => {
     );
     return response;
 };
+
+export const getChannelMessages = async (token: string, channelId: number) => {
+    const response = await axios.get(
+        BASE_URL+GET_CHANNELMESSAGES+channelId,
+        {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        },
+    );
+    return response;
+}

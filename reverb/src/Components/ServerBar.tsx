@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ServerButton, IconButton } from "./IconLib";
-import { useStompContext } from "../Hooks/useStompContext";
 import { getUserServers } from "../Api/axios"; // your REST helper
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
@@ -15,15 +14,13 @@ interface ServerData {
 
 const ServerBar = () => {
   const stomp = useStomp();
-  const { auth } = useAuth(); // { id, username, email, token, etc. }
+  const { auth } = useAuth();
   const [servers, setServers] = useState<ServerData[]>([]);
   const [showCreateServer, setShowCreateServer] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
-  // 1) On mount, fetch the servers via REST
   useEffect(() => {
-    // Suppose the `auth.id` is the user’s ID
     console.log("useEffect for fetching servers triggered");
     console.log("Auth object:", auth);
     if (!auth?.accessToken) {
@@ -31,11 +28,7 @@ const ServerBar = () => {
       return;
     }
     
-    // The endpoint getServer() calls /server/getByUser/{serverId}
-    // but in your snippet, it's a bit confusing naming.
-    // Let's assume you want to pass the *userId* instead of "serverId" 
-    // because /server/getByUser/ typically expects userId.
-    getUserServers(auth.accessToken, auth.id)
+    getUserServers(auth.accessToken, auth.userId)
       .then((resp) => {
         console.log("Servers loaded:", resp.data);
 
@@ -43,19 +36,18 @@ const ServerBar = () => {
           console.error("Expected resp.data to be an array, but it's not:", resp.data);
           return;
         }
-        // Transform the response data to match ServerData interface
         const transformedServers: ServerData[] = resp.data.map((srv: any) => {
           if (!srv.serverId || !srv.serverName) {
             console.warn("Incomplete server data:", srv);
-            return null; // or handle as per your requirement
+            return null; 
           }
 
           return {
-            id: srv.serverId.toString(),           // Convert number to string
-            name: srv.serverName,           // Map serverName to name
-            description: srv.description,    // Direct mapping
+            id: srv.serverId.toString(),          
+            name: srv.serverName,           
+            description: srv.description,   
           };
-        }).filter((srv: ServerData | null) => srv !== null) as ServerData[]; // Remove nulls
+        }).filter((srv: ServerData | null) => srv !== null) as ServerData[]; 
 
         console.log("Transformed servers:", transformedServers);
         setServers(transformedServers);
@@ -65,24 +57,71 @@ const ServerBar = () => {
       });
   }, [auth]);
 
-  // 2) Subscribe to “server.created” in real time 
   useEffect(() => {
     if (!stomp || !stomp.connected) return;
     const sub = stomp.onServerCreated((event) => {
-      // event: { id, name, description }
-      setServers((prev) => [...prev, event]);
+      console.log("Received server.created event:", event);
+
+      // Transform the event data to match ServerData
+      const newServer: ServerData = {
+        id: event.id.toString(), // Ensure ID is a string
+        name: event.name || "Unnamed Server", // Fallbacks
+        description: event.description,
+      };
+
+      console.log("Adding new server to state:", newServer);
+      setServers((prev) => [...prev, newServer]);
     });
     return () => sub?.unsubscribe();
   }, [stomp]);
 
+
+  const refetchServers = () => {
+    getUserServers(auth.accessToken, auth.userId)
+    .then((resp) => {
+      console.log("Servers loaded:", resp.data);
+
+      if (!Array.isArray(resp.data)) {
+        console.error("Expected resp.data to be an array, but it's not:", resp.data);
+        return;
+      }
+      const transformedServers: ServerData[] = resp.data.map((srv: any) => {
+        if (!srv.serverId || !srv.serverName) {
+          console.warn("Incomplete server data:", srv);
+          return null; 
+        }
+
+        return {
+          id: srv.serverId.toString(),          
+          name: srv.serverName,           
+          description: srv.description,   
+        };
+      }).filter((srv: ServerData | null) => srv !== null) as ServerData[]; 
+
+      console.log("Transformed servers:", transformedServers);
+      setServers(transformedServers);
+    })
+    .catch((error) => {
+      console.error("Failed to load servers", error);
+    });
+  }
+
+
   // 3) “Create Server” method
   const handleCreateServer = () => {
-    if (!newName) return;
-    stomp.createServer(newName, auth.id, newDesc);
-    setNewName("");
-    setNewDesc("");
-    setShowCreateServer(false);
+    if (!newName) {
+      console.log("Server Name is empty. Aborting creation.");
+      return;
+    }
+    console.log("Creating server with Name:", newName, "Description:", newDesc, "User ID:", auth.userId);
+    stomp.createServer(newName, auth.userId, newDesc)
+        console.log("Server creation request sent successfully.");
+        setNewName("");
+        setNewDesc("");
+        setShowCreateServer(false);
+        refetchServers();
   };
+
 
   return (
     <div>
@@ -92,7 +131,7 @@ const ServerBar = () => {
         >
         {/* Render existing servers */}
         {servers.map((srv) => (
-            <Link key={srv.id} to={`/home/server/${srv.id}`}>
+            <Link key={srv.id} to={`/server/${srv.id}`}>
             <ServerButton name={srv.name} />
             </Link>
         ))}
@@ -104,20 +143,26 @@ const ServerBar = () => {
 
         {/* Modal for creating server */}
         {showCreateServer && (
-            <div className="absolute top-20 bg-gray-700 p-4 rounded shadow">
+            <div className="right-20 absolute top-20 bg-gray-700 p-4 rounded shadow">
             <h3 className="text-lg font-bold">Create Server</h3>
             <input
-                className="mt-2 p-1 text-black"
-                placeholder="Server Name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+              className="mt-2 p-1 text-black"
+              placeholder="Server Name"
+              value={newName}
+              onChange={(e) => {
+                console.log("Server Name Input Changed:", e.target.value);
+                setNewName(e.target.value);
+              }}
             />
             <textarea
-                className="mt-2 p-1 text-black"
-                placeholder="Description (optional)"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-            />
+              className="mt-2 p-1 text-black"
+              placeholder="Description (optional)"
+              value={newDesc}
+              onChange={(e) => {
+                console.log("Server Description Input Changed:", e.target.value);
+                setNewDesc(e.target.value);
+              }}
+/>
             <button
                 className="bg-blue-500 p-1 mt-2"
                 onClick={handleCreateServer}

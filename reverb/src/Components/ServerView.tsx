@@ -1,20 +1,31 @@
 // src/Components/ServerView.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import ChannelBar from "./ChannelBar";
 import ChatView from "./ChatView";
 
 const ServerView = () => {
-  const { serverId } = useParams();
+  const { serverId } = useParams<{ serverId: string }>();
+  console.log("Server ID:", serverId);
 
+  // 1) local state for which channel is active
+  const [activeChannelId, setActiveChannelId] = useState<number>(0);
+
+  if (!serverId) {
+    return <div>Invalid server ID.</div>;
+  }
+
+  // 2) pass a callback to ChannelBar so it can set 'activeChannelId'
   return (
     <div className="flex w-full">
-      {/* LEFT: Channel list for the current server */}
-      <ChannelBar serverId={serverId!} />
+      <ChannelBar 
+        serverId={serverId} 
+        onChannelSelect={(chId) => setActiveChannelId(chId)} 
+      />
 
-      {/* RIGHT: Chat area */}
       <div className="flex-grow bg-gray-700">
-        <ChatView serverId={serverId!} />
+        {/* pass active channel to ChatView */}
+        <ChatView serverId={serverId} channelId={activeChannelId} />
       </div>
     </div>
   );

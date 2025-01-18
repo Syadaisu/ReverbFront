@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import SockJS from "sockjs-client";
 import { Client, StompSubscription, IMessage } from "@stomp/stompjs";
+import { get } from "http";
 
 interface ServerJoinedEvent {
   serverId: string;
@@ -35,8 +36,8 @@ export interface MessageProps {
   id: string;
   serverId: string;
   channelId: string;
-  userId: string;
-  content: string;
+  authorId: string;
+  body: string;
   timestamp: string;
 }
 
@@ -126,24 +127,31 @@ export const useStomp = () => {
     publish("/app/joinServer", { serverId, userId });
   };
 
-  const createChannel = (serverId: string, name: string, description?: string) => {
-    publish("/app/createChannel", { serverId, name, description });
+  const createChannel = (serverId: string, channelName: string, channelDescription?: string) => {
+    console.log("Creating channel with Name:", channelName, "Description:", channelDescription, "Server ID:", serverId);
+    publish("/app/createChannel", { serverId, channelName, channelDescription });
   };
 
-  const createServer = (name: string, ownerId: number, description?: string, ) => {
-    publish("/app/createServer", { name, description, ownerId });
+  const createServer = (serverName: string, ownerId: number, serverDescription?: string, ) => {
+    console.log("Creating server with Name:", serverName, "Description:", serverDescription, "User ID:", ownerId);
+    publish("/app/createServer", { serverName, serverDescription, ownerId });
   };
 
   const editChannel = (channelId: string, name: string, description?: string) => {
     publish("/app/editChannel", { channelId, name, description });
   };
 
+  const getChannels = (serverId: string) => {
+    publish("/app/getChannels", { serverId });
+  };
+
   const deleteChannel = (serverId: string, channelId: string) => {
     publish("/app/deleteChannel", { serverId, channelId });
   };
 
-  const sendMessage = (serverId: string, channelId: string, userId: string, content: string) => {
-    publish("/app/sendMessage", { serverId, channelId, userId, content });
+  const sendMessage = (channelId: number, authorId: number, body: string) => {
+    console.log ("Sending message channel:", channelId, "author:", authorId, "body:", body);
+    publish("/app/addMessage", { channelId, authorId, body, responseToId: "", responseTo: "", attachment: 0 });
   };
 
   // Define subscribe methods
@@ -187,8 +195,8 @@ export const useStomp = () => {
     });
   };
 
-  const onMessageSent = (serverId: string, channelId: string, callback: (event: MessageSentEvent) => void) => {
-    const destination = `/topic/server.${serverId}.channel.${channelId}.messages`;
+  const onMessageSent = (serverId: string, channelId: number, callback: (event: MessageSentEvent) => void) => {
+    const destination = `/topic/server.${serverId}.channel.${channelId}.message.added`;
     return subscribe(destination, (msg) => {
       const body = JSON.parse(msg.body) as MessageSentEvent;
       callback(body);
@@ -209,5 +217,6 @@ export const useStomp = () => {
     onChannelEdited,
     onChannelDeleted,
     onMessageSent,
+    getChannels,
   };
 };

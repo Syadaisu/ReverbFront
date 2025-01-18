@@ -32,16 +32,16 @@ const LoginForm = () => {
           const user = response?.data?.user; // user is an object with userId, userName, etc.
           
           // Now extract the fields from user
-          const id = user?.userId;
+          const userId = user?.userId;
           const username = user?.userName;
           const avatar = user?.avatar;
       
           // If you want to store them in a single object:
           console.log(user.userId, user.userName, user.email, user.creationDate, user.avatar);
-          setAuth({ id, username, email, accessToken, avatar });
+          setAuth({ userId, username, email, accessToken, avatar });
           localStorage.setItem(
             "auth",
-            JSON.stringify({ id, username, email, accessToken, refreshToken, avatar })
+            JSON.stringify({ userId, username, email, accessToken, refreshToken, avatar })
           );
       
           setSuccess(true);

@@ -11,8 +11,10 @@ const root = ReactDOM.createRoot(
 );
 root.render(
     <AuthProvider>
-        <BrowserRouter>
-            <App />
-        </BrowserRouter>
+        <StompProvider>
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        </StompProvider>
     </AuthProvider>
 );
