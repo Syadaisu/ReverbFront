@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ServerButton, IconButton } from "./IconLib";
-import { getUserServers } from "../Api/axios"; // your REST helper
+import { getUserServers, joinServer } from "../Api/axios"; // your REST helper
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
 
@@ -19,6 +19,8 @@ const ServerBar = () => {
   const [showCreateServer, setShowCreateServer] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [showJoinServer, setShowJoinServer] = useState(false);
+  const [joinServerName, setJoinServerName] = useState("");
 
   useEffect(() => {
     console.log("useEffect for fetching servers triggered");
@@ -122,6 +124,24 @@ const ServerBar = () => {
         refetchServers();
   };
 
+  const handleJoinServer = () => {
+    if (!joinServerName) {
+      console.log("Server Name is empty. Aborting join.");
+      return;
+    }
+    console.log("Joining server with ID:", joinServerName, "User ID:", auth.userId);
+    joinServer(auth.accessToken, joinServerName, auth.userId)
+      .then((resp) => {
+        console.log("Successfully joined the server:", resp.data);
+        setJoinServerName("");
+        setShowJoinServer(false);
+        refetchServers();
+      })
+      .catch((error) => {
+        console.error("Failed to join the server:", error);
+        // Optionally, display an error message to the user
+      });
+  };
 
   return (
     <div>
@@ -139,6 +159,11 @@ const ServerBar = () => {
         {/* “+” button to create a new server in real time */}
         <div onClick={() => setShowCreateServer(true)}>
             <IconButton icon="+" name="Create Server" />
+        </div>
+
+        {/* “Join” button to join a server */}
+        <div onClick={() => setShowJoinServer(true)}>
+            <IconButton icon="🔗" name="Join Server" />
         </div>
 
         {/* Modal for creating server */}
@@ -162,7 +187,7 @@ const ServerBar = () => {
                 console.log("Server Description Input Changed:", e.target.value);
                 setNewDesc(e.target.value);
               }}
-/>
+            />
             <button
                 className="bg-blue-500 p-1 mt-2"
                 onClick={handleCreateServer}
@@ -172,6 +197,34 @@ const ServerBar = () => {
             <button
                 className="bg-gray-500 p-1 ml-2"
                 onClick={() => setShowCreateServer(false)}
+            >
+                Cancel
+            </button>
+            </div>
+        )}
+
+        {/* Modal for joining server */}
+        {showJoinServer && (
+            <div className="right-20 absolute top-20 bg-gray-700 p-4 rounded shadow">
+            <h3 className="text-lg font-bold">Join Server</h3>
+            <input
+              className="mt-2 p-1 text-black"
+              placeholder="Server Name"
+              value={joinServerName}
+              onChange={(e) => {
+                console.log("Server ID Input Changed:", e.target.value);
+                setJoinServerName(e.target.value);
+              }}
+            />
+            <button
+                className="bg-green-500 p-1 mt-2"
+                onClick={handleJoinServer}
+            >
+                Join
+            </button>
+            <button
+                className="bg-gray-500 p-1 ml-2"
+                onClick={() => setShowJoinServer(false)}
             >
                 Cancel
             </button>

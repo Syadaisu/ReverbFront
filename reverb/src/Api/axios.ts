@@ -9,6 +9,7 @@ const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
 export const AVATAR_URL = '/attachment/view/'
+const JOIN_SERVER = '/server/join'
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -107,4 +108,25 @@ export const getChannelMessages = async (token: string, channelId: number) => {
         },
     );
     return response;
-}
+
+};
+
+export const joinServer = async (token: string, serverName: string, userId: number) => {
+    // Create URLSearchParams to format data as application/x-www-form-urlencoded
+    const params = new URLSearchParams();
+    params.append('serverName', serverName);
+    params.append('userId', userId.toString());
+    console.log("Joining server with link:", BASE_URL + JOIN_SERVER + params.toString());
+    const response = await axios.post(
+        BASE_URL + JOIN_SERVER,
+        params.toString(), // Convert to string for URL-encoded format
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+

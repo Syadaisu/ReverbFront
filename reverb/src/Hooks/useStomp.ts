@@ -120,8 +120,8 @@ export const useStomp = () => {
   }, []);
 
   // Define publish methods
-  const joinServer = (serverId: string, userId: string) => {
-    publish("/app/joinServer", { serverId, userId });
+  const joinServer = (serverName: string, userId: string) => {
+    publish("/app/joinServer", { serverName, userId });
   };
 
   const createChannel = (serverId: string, channelName: string, channelDescription?: string) => {
