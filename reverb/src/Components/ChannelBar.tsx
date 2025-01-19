@@ -4,6 +4,8 @@ import { ChannelButton } from "./IconLib";
 import { useStompContext } from "../Hooks/useStompContext";
 import useAuth from "../Hooks/useAuth";
 import { getChannels } from "../Api/axios";
+import EditChannelModal from "./EditChannelModal";
+import DeleteChannelConfirmation from "./DeleteChannelConfirmation";
 
 interface ChannelData {
   id: string;
@@ -24,6 +26,9 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [chName, setChName] = useState("");
   const [chDesc, setChDesc] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   //Subscribe to new channels for this server
   useEffect(() => {
@@ -79,6 +84,16 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
         });
     }, [auth, serverId]);
   
+  
+    const openEdit = (channel: ChannelData) => {
+      setSelectedChannel(channel);
+      setShowEditModal(true);
+    };
+  
+    const openDelete = (channel: ChannelData) => {
+      setSelectedChannel(channel);
+      setShowDeleteModal(true);
+    };
 
   const refetchChannels = () => {
     getChannels(auth.accessToken, serverId)
@@ -134,13 +149,23 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       </div>
       <div className="space-y-2">
       {channels.map((ch) => (
-          <button
-            key={ch.id}
-            className="text-left w-full"
-            onClick={() => onChannelSelect(parseInt(ch.id))}
-          >
+          <div key={ch.id} className="flex items-center justify-between">
             <ChannelButton name={`#${ch.name}`} />
-          </button>
+            <div className="flex space-x-1">
+              <button
+                className="bg-blue-600 text-white px-2 py-1 rounded"
+                onClick={() => openEdit(ch)}
+              >
+                E
+              </button>
+              <button
+                className="bg-red-600 text-white px-2 py-1 rounded"
+                onClick={() => openDelete(ch)}
+              >
+                D
+              </button>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -173,6 +198,26 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
             </button>
           </div>
         </div>
+      )}
+      {/* Edit Channel Modal */}
+      {showEditModal && selectedChannel && (
+        <EditChannelModal
+          channelId={Number(selectedChannel.id)}
+          currentName={selectedChannel.name}
+          currentDesc={selectedChannel.description}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={refetchChannels}
+        />
+      )}
+
+      {/* Delete Channel Confirmation */}
+      {showDeleteModal && selectedChannel && (
+        <DeleteChannelConfirmation
+          channelId={Number(selectedChannel.id)}
+          channelName={selectedChannel.name}
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={refetchChannels}
+        />
       )}
     </div>
   );

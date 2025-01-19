@@ -5,9 +5,11 @@ import { ServerButton, IconButton } from "./IconLib";
 import { getUserServers, joinServer } from "../Api/axios"; // your REST helper
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
+import EditServerModal from "./EditServerModal";
+import DeleteServerConfirmation from "./DeleteServerConfirmation";
 
 interface ServerData {
-  id: string;
+  id: number;
   name: string;
   description?: string;
 }
@@ -21,6 +23,9 @@ const ServerBar = () => {
   const [newDesc, setNewDesc] = useState("");
   const [showJoinServer, setShowJoinServer] = useState(false);
   const [joinServerName, setJoinServerName] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
 
   useEffect(() => {
     console.log("useEffect for fetching servers triggered");
@@ -66,7 +71,7 @@ const ServerBar = () => {
 
       // Transform the event data to match ServerData
       const newServer: ServerData = {
-        id: event.id.toString(), // Ensure ID is a string
+        id: Number(event.id), // Ensure ID is a string
         name: event.name || "Unnamed Server", // Fallbacks
         description: event.description,
       };
@@ -77,6 +82,16 @@ const ServerBar = () => {
     return () => sub?.unsubscribe();
   }, [stomp]);
 
+
+  const handleOpenEdit = (server: ServerData) => {
+    setSelectedServer(server);
+    setShowEditModal(true);
+  };
+
+  const handleOpenDelete = (server: ServerData) => {
+    setSelectedServer(server);
+    setShowDeleteModal(true);
+  };
 
   const refetchServers = () => {
     getUserServers(auth.accessToken, auth.userId)
@@ -151,9 +166,27 @@ const ServerBar = () => {
         >
         {/* Render existing servers */}
         {servers.map((srv) => (
-            <Link key={srv.id} to={`/server/${srv.id}`}>
-            <ServerButton name={srv.name} />
+          <div key={srv.id} className="flex items-center justify-between">
+            <Link to={`/server/${srv.id}`}>
+              <ServerButton name={srv.name} />
             </Link>
+            <div className="flex space-x-1">
+              {/* Edit */}
+              <button
+                className="bg-blue-600 text-white px-2 py-1 rounded"
+                onClick={() => handleOpenEdit(srv)}
+              >
+                E
+              </button>
+              {/* Delete */}
+              <button
+                className="bg-red-600 text-white px-2 py-1 rounded"
+                onClick={() => handleOpenDelete(srv)}
+              >
+                D
+              </button>
+            </div>
+          </div>
         ))}
 
         {/* “+” button to create a new server in real time */}
@@ -165,6 +198,8 @@ const ServerBar = () => {
         <div onClick={() => setShowJoinServer(true)}>
             <IconButton icon="🔗" name="Join Server" />
         </div>
+
+
 
         {/* Modal for creating server */}
         {showCreateServer && (
@@ -230,6 +265,27 @@ const ServerBar = () => {
             </button>
             </div>
         )}
+
+        {/* Edit Modal */}
+      {showEditModal && selectedServer && (
+        <EditServerModal
+          serverId={selectedServer.id}
+          currentName={selectedServer.name}
+          currentDesc={selectedServer.description}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={refetchServers}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedServer && (
+        <DeleteServerConfirmation
+          serverId={selectedServer.id}
+          serverName={selectedServer.name}
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={refetchServers}
+        />
+      )}
         </div>
     </div>
   );

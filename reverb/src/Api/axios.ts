@@ -15,6 +15,12 @@ const JOIN_SERVER = '/server/join'
 
 const EDIT_USER = '/user/edit/'
 const UPLOAD_AVATAR = '/user/avatar/'
+const EDIT_SERVER = '/server/edit/'
+const DELETE_SERVER = '/server/delete/'
+const EDIT_CHANNEL = '/channel/edit/'
+const DELETE_CHANNEL = '/channel/delete/'
+
+
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
         BASE_URL+REGISTER_URL,
@@ -168,3 +174,63 @@ export const uploadAvatar = async (token: string, userId: number, file: File) =>
         );
         return response;
     };
+
+export const editServer = async (token: string, serverId: number, serverName?: string, serverDescription?: string) => {
+    const response = await axios.put(
+        BASE_URL + EDIT_SERVER + serverId,
+        JSON.stringify({
+            serverName: serverName,
+            serverDescription: serverDescription,
+        }),
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const deleteServer = async (token: string, serverId: number) => {
+    const response = await axios.delete(
+        BASE_URL + DELETE_SERVER + serverId,
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const editChannel = async (token: string, channelId: number, channelName?: string, channelDescription?: string) => {
+    const response = await axios.put(
+        BASE_URL + EDIT_CHANNEL + channelId,
+        JSON.stringify({
+            channelName: channelName,
+            channelDescription: channelDescription,
+        }),
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const deleteChannel = async (token: string, channelId: number) => {
+    const response = await axios.delete(
+        BASE_URL + DELETE_CHANNEL + channelId,
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
