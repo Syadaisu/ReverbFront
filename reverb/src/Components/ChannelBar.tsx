@@ -150,7 +150,12 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       <div className="space-y-2">
       {channels.map((ch) => (
           <div key={ch.id} className="flex items-center justify-between">
+            <button
+            className="text-left w-full"
+            onClick={() => onChannelSelect(parseInt(ch.id))}
+          >
             <ChannelButton name={`#${ch.name}`} />
+          </button>
             <div className="flex space-x-1">
               <button
                 className="bg-blue-600 text-white px-2 py-1 rounded"
