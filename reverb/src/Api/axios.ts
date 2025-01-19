@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8181';
+export const BASE_URL = 'http://localhost:8181';
 const REGISTER_URL = '/account/register';
 const LOGIN_URL = '/account/login';
 const GET_CHANNELS = '/channel/getByServer/'
@@ -8,6 +8,7 @@ const GET_SERVERS = '/server/getByUser/'
 const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
+export const AVATAR_URL = '/attachment/view/'
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(

@@ -4,10 +4,12 @@ import { Outlet } from "react-router-dom";
 import ServerBar from "./ServerBar";
 import { UserAvatar } from "./IconLib";
 import useAuth from "../Hooks/useAuth";
+import { BASE_URL, AVATAR_URL } from "../Api/axios";
 
 const Home = () => {
   const { auth } = useAuth(); 
   // auth = { id, username, email, accessToken, avatar }
+  console.log ("Avatar: " + BASE_URL + AVATAR_URL + auth.avatar);
 
   return (
     <div className="w-screen h-screen flex bg-gray-800 text-white">
@@ -21,7 +23,7 @@ const Home = () => {
           <div className="font-semibold">
             Welcome, {auth.username}!
           </div>
-          <UserAvatar name={auth.username} picture={auth.avatar} />
+          <UserAvatar name={auth.username} picture={BASE_URL+AVATAR_URL+auth.avatar} />
         </div>
 
         {/* The rest -> Outlet for server or DM content */}
