@@ -3,13 +3,17 @@ import axios from 'axios';
 export const BASE_URL = 'http://localhost:8181';
 const REGISTER_URL = '/account/register';
 const LOGIN_URL = '/account/login';
+
 const GET_CHANNELS = '/channel/getByServer/'
 const GET_SERVERS = '/server/getByUser/'
 const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
+
 export const AVATAR_URL = '/attachment/view/'
 const JOIN_SERVER = '/server/join'
+
+const EDIT_USER = '/user/edit'
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -130,3 +134,43 @@ export const joinServer = async (token: string, serverName: string, userId: numb
     return response;
 };
 
+
+export const editUser = async (
+    token: string,
+    userName?: string,
+    oldPassword?: string,
+    newPassword?: string,
+    avatarFile?: File
+  ) => {
+      // We'll create FormData. We'll store the JSON fields in "data" key
+      const formData = new FormData();
+  
+      const dataObj: any = {};
+      if (userName) dataObj.userName = userName;
+      if (oldPassword) dataObj.oldPassword = oldPassword;
+      if (newPassword) dataObj.newPassword = newPassword;
+  
+      // Put the JSON data under key "data"
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(dataObj)], { type: "application/json" })
+      );
+  
+      // If a new avatar is chosen, attach it
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+  
+      // We'll do a PUT request
+      const response = await axios.put(
+        BASE_URL + EDIT_USER,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+      return response;
+    };
