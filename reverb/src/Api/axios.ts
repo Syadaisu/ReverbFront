@@ -13,8 +13,8 @@ const GET_CHANNELMESSAGES = '/message/getByChannel/'
 export const AVATAR_URL = '/attachment/view/'
 const JOIN_SERVER = '/server/join'
 
-const EDIT_USER = '/user/edit'
-
+const EDIT_USER = '/user/edit/'
+const UPLOAD_AVATAR = '/user/avatar/'
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
         BASE_URL+REGISTER_URL,
@@ -135,42 +135,36 @@ export const joinServer = async (token: string, serverName: string, userId: numb
 };
 
 
-export const editUser = async (
-    token: string,
-    userName?: string,
-    oldPassword?: string,
-    newPassword?: string,
-    avatarFile?: File
-  ) => {
-      // We'll create FormData. We'll store the JSON fields in "data" key
-      const formData = new FormData();
-  
-      const dataObj: any = {};
-      if (userName) dataObj.userName = userName;
-      if (oldPassword) dataObj.oldPassword = oldPassword;
-      if (newPassword) dataObj.newPassword = newPassword;
-  
-      // Put the JSON data under key "data"
-      formData.append(
-        "data",
-        new Blob([JSON.stringify(dataObj)], { type: "application/json" })
-      );
-  
-      // If a new avatar is chosen, attach it
-      if (avatarFile) {
-        formData.append("avatar", avatarFile);
-      }
-  
-      // We'll do a PUT request
-      const response = await axios.put(
-        BASE_URL + EDIT_USER,
-        formData,
+export const editUserData = async (token: string, userId: number, userName?: string, oldPassword?: string, newPassword?: string) => {
+    const response = await axios.put(
+        BASE_URL + EDIT_USER + userId,
+        JSON.stringify({
+            userName: userName,
+            oldPassword: oldPassword,
+            newPassword: newPassword,
+        }),
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`,
-          },
-        }
-      );
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );  
       return response;
+    };
+
+export const uploadAvatar = async (token: string, userId: number, file: File) => {
+    const formData = new FormData();
+        formData.append('avatar', file);
+        const response = await axios.put(
+            BASE_URL + UPLOAD_AVATAR + userId,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                },
+            },
+        );
+        return response;
     };

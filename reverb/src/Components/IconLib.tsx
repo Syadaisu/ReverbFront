@@ -6,6 +6,7 @@ interface ServerButtonProps {
   interface UserAvatarProps {
     name?: string;
     picture?: string;
+    refreshflag?: number;
   }
   
   
@@ -114,9 +115,11 @@ interface ServerButtonProps {
   );
   
   // same as channel button but with dashed border
-  export const UserAvatar = ({ name, picture }: UserAvatarProps) => {
+  export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
     const defaultColor = "#039be5";
-  
+
+    const cacheBuster = refreshflag;
+    picture = `${picture}?cb=${cacheBuster}`;
     let backgroundColor = defaultColor;
     if (name) {
       const firstLetter = name[0].toLowerCase();
