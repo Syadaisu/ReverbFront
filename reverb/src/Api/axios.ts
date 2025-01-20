@@ -5,7 +5,8 @@ const REGISTER_URL = '/account/register';
 const LOGIN_URL = '/account/login';
 
 const GET_CHANNELS = '/channel/getByServer/'
-const GET_SERVERS = '/server/getByUser/'
+const GET_SERVERS = '/server/'
+const GET_CHANNEL = '/channel/'
 const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
@@ -68,9 +69,22 @@ export const getUserServers = async (token: string, userId: number) => {
     return response;
 }
 
-export const getServer = async (token: string, serverId: string) => {
+export const getServer = async (token: string, serverId: number) => {
     const response = await axios.get(
         BASE_URL+GET_SERVERS+serverId,
+        {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        },
+    );
+    return response;
+};
+
+export const getChannel = async (token: string, channelId: number) => {
+    const response = await axios.get(
+        BASE_URL+GET_CHANNEL+channelId,
         {
             headers: { 
                 'Content-Type': 'application/json',

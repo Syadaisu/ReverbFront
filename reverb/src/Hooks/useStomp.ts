@@ -124,9 +124,9 @@ export const useStomp = () => {
     publish("/app/joinServer", { serverName, userId });
   };
 
-  const createChannel = (serverId: string, channelName: string, channelDescription?: string) => {
-    console.log("Creating channel with Name:", channelName, "Description:", channelDescription, "Server ID:", serverId);
-    publish("/app/createChannel", { serverId, channelName, channelDescription });
+  const createChannel = (serverId: string, channelName: string, description?: string) => {
+    console.log("Creating channel with Name:", channelName, "Description:", description, "Server ID:", serverId);
+    publish("/app/createChannel", { serverId, channelName, description });
   };
 
   const createServer = (serverName: string, ownerId: number, serverDescription?: string, ) => {
@@ -176,7 +176,7 @@ export const useStomp = () => {
   }
 
   const onChannelCreated = (serverId: string, callback: (event: ChannelCreatedEvent) => void) => {
-    const destination = `/topic/server.${serverId}.channel.created`;
+    const destination = `/topic/server.${serverId}.channel.added`;
     return subscribe(destination, (msg) => {
       const body = JSON.parse(msg.body) as ChannelCreatedEvent;
       callback(body);

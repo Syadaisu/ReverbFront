@@ -19,13 +19,13 @@ const ServerView = () => {
   return (
     <div className="flex w-full">
       <ChannelBar 
-        serverId={serverId} 
+        serverId={Number(serverId)} 
         onChannelSelect={(chId) => setActiveChannelId(chId)} 
       />
 
       <div className="flex-grow bg-gray-700">
         {/* pass active channel to ChatView */}
-        <ChatView serverId={serverId} channelId={activeChannelId} />
+        <ChatView serverId={Number(serverId)} channelId={activeChannelId} />
       </div>
     </div>
   );

@@ -12,7 +12,6 @@ function App() {
           <Route path='login/*' element={<LoginPage />} />
           <Route path='register/*' element={<RegisterPage />} />
           <Route path='home/*' element={<Home />} />
-          <Route path="server/:serverId/*" element={<ServerView />} />
           <Route path='*' element={<Navigate to='/login' replace />} />
       </Routes>
   );
