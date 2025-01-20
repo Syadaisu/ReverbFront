@@ -10,7 +10,10 @@ interface ServerJoinedEvent {
 }
 
 interface ChannelCreatedEvent {
-  channel: ChannelProps;
+  channelId: string;
+  channelName: string;
+  description?: string;
+  roleAccess?:string;
 }
 
 interface ChannelEditedEvent {
@@ -176,7 +179,8 @@ export const useStomp = () => {
   }
 
   const onChannelCreated = (serverId: string, callback: (event: ChannelCreatedEvent) => void) => {
-    const destination = `/topic/server.${serverId}.channel.added`;
+    const destination = `/topic/server.channel.added`;
+    console.log("Subscribing to:", destination);
     return subscribe(destination, (msg) => {
       const body = JSON.parse(msg.body) as ChannelCreatedEvent;
       callback(body);

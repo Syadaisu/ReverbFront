@@ -99,6 +99,27 @@ export const ServerButton = ({ name, picture }: ServerButtonProps) => (
   </div>
 );
 
+export const ServerIcon = ({ name, picture }: ServerButtonProps) => {
+  var avatar = null;
+  if (picture !== BASE_URL + AVATAR_URL + "undefined") {
+    avatar = picture;
+  }
+  console.log(avatar);
+  return (
+    <div
+      className='group font-semibold relative flex items-center justify-center h-12 w-12 text-primary rounded-3xl duration-300'
+      style={{ backgroundColor: letterToColor[name[0].toLowerCase()], }}>
+      {avatar ? (
+        <picture
+          className='group bg-center bg-cover w-full h-full rounded-full'
+          style={{ backgroundImage: `url(${avatar})` }}></picture>
+      ) : (
+        name ? name[0].toUpperCase() : ''
+      )}
+    </div>
+  );
+};
+
 // technical buttons (join server, create server, etc.)
 export const IconButton = ({ icon, name }: IconButtonProps) => (
   <div className='font-semibold relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto bg-secondary group hover:bg-yellow-500 text-white hover:text-primary hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer'>

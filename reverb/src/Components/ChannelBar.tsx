@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ChannelButton, ServerButton, UserAvatar } from "./IconLib";
+import { ChannelButton, ServerButton, ServerIcon, UserAvatar } from "./IconLib";
 import { useStompContext } from "../Hooks/useStompContext";
 import useAuth from "../Hooks/useAuth";
 import { getChannels, getServer } from "../Api/axios";
@@ -33,7 +33,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   // Could store server info if you want to show an avatar or name
   const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
 
-  const [channels, setChannels] = useState<ChannelData[]>([]);
+  const [channels, setChannels] = useState<any[]>([]);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [chName, setChName] = useState("");
   const [chDesc, setChDesc] = useState("");
@@ -82,11 +82,21 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
 
   // Subscribe to new channel events
   useEffect(() => {
-    if (!stomp || !stomp.connected) return;
-    const sub = stomp.onChannelCreated(serverId.toString(), (event) => {
-      if (event.channel) {
-        setChannels((prev) => [...prev, event.channel]);
+    if (!stomp || !stomp.connected || !serverId) return;
+    console.log("Subscribing to channel events for server", serverId, stomp);
+    const sub = stomp.onChannelCreated(serverId.toString(), (channel) => {
+      console.log("Channel event ",channel);
+      if (channel) {
+        const newChannel = {
+          id: channel.channelId.toString(),
+          name: channel.channelName,
+          description: channel.description,
+          serverId: serverId.toString()
+        };
+        setChannels((prev) => [...prev, newChannel]);
+        console.log("New channel added", newChannel);
       }
+      
     });
     return () => sub?.unsubscribe();
   }, [stomp, serverId]);
@@ -143,7 +153,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       {/** SERVER INFO */}
       {serverInfo && (
         <div className="flex items-center space-x-2 mb-4">
-          <UserAvatar name={serverInfo.serverName} picture={serverInfo.avatarUrl} />
+          <ServerIcon name={serverInfo.serverName} picture={serverInfo.avatarUrl} />
           <h2 className="text-lg font-bold">{serverInfo.serverName}</h2>
           {serverInfo.serverDescription && (
           <p className="text-sm text-gray-400 mt-1">{serverInfo.serverDescription}</p>
