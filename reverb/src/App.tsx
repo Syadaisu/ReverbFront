@@ -4,6 +4,7 @@ import RegisterPage from "./Pages/RegisterPage";
 import MainPage from "./Pages/MainPage";
 import Home from "./Components/Home";
 import ServerView from "./Components/ServerView";
+import ProtectedRoute from "./Components/ProtectedRoutes";
 
 
 function App() {
@@ -11,7 +12,12 @@ function App() {
       <Routes>
           <Route path='login/*' element={<LoginPage />} />
           <Route path='register/*' element={<RegisterPage />} />
-          <Route path='home/*' element={<Home />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path='home/*' element={<Home />} />
+            {/* Add other protected routes here */}
+          </Route>
+          
           <Route path='*' element={<Navigate to='/login' replace />} />
       </Routes>
   );

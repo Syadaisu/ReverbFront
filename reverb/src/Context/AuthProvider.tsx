@@ -20,23 +20,42 @@ const defaultAuthState: AuthState = {
 const AuthContext = createContext<{
   auth: AuthState;
   setAuth: React.Dispatch<React.SetStateAction<AuthState>>;
+  logout: () => void;
 }>({
   auth: defaultAuthState,
-  setAuth: () => {}
+  setAuth: () => {},
+  logout: () => {}
 });
 
-export const AuthProvider = ({ children }: any) => {
-  const [auth, setAuth] = useState<AuthState>(defaultAuthState);
+export const AuthProvider = ({ children }: { children: any }) => {
+  // Initialize auth state from localStorage
+  const [auth, setAuth] = useState<AuthState>(() => {
+    const stored = localStorage.getItem("auth");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error("Failed to parse auth from localStorage:", e);
+        return defaultAuthState;
+      }
+    }
+    return defaultAuthState;
+  });
+
+  const logout = () => {
+    setAuth(defaultAuthState);
+    localStorage.removeItem("auth");
+  };
 
   // On initial mount, re-hydrate from localStorage if available
-  useEffect(() => {
+  /*useEffect(() => {
     const stored = localStorage.getItem("auth");
     if (stored) {
       const parsed = JSON.parse(stored);
       // Optionally validate parsed object structure
       setAuth(parsed);
     }
-  }, []);
+  }, []);*/
 
   // Additionally, whenever `auth` changes, update localStorage
   useEffect(() => {
@@ -44,7 +63,7 @@ export const AuthProvider = ({ children }: any) => {
   }, [auth]);
 
   return (
-    <AuthContext.Provider value={{ auth, setAuth }}>
+    <AuthContext.Provider value={{ auth, setAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

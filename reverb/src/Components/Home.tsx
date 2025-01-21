@@ -10,7 +10,7 @@ import EditUserModal from "./EditUserModal";
 import UpdateAvatarModal from "./UpdateAvatarModal";
 
 const Home = () => {
-  const { auth } = useAuth();
+  const { auth,logout } = useAuth();
 
   // State for user dropdown modals
   const [showEditUser, setShowEditUser] = useState(false);
@@ -19,6 +19,15 @@ const Home = () => {
 
   // Toggle for user avatar dropdown
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+
+  const handleLogout = () => {
+    
+    logout();
+    //Route to login page
+
+    console.log("Logging out...");
+  }
 
   // When avatar is updated, force a re-render by incrementing `refreshFlag`
   const handleAvatarUpdate = () => {
@@ -78,6 +87,15 @@ const Home = () => {
                 >
                   Change Avatar
                 </button>
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-600"
+                  onClick={() => {
+                    handleLogout();
+                    console.log("Logging out...");
+                  }}
+                  >
+                  Logout
+                  </button>
               </div>
             )}
           </div>
