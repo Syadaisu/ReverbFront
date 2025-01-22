@@ -5,6 +5,7 @@ import useAuth from "../Hooks/useAuth";
 import { getChannels, getServer } from "../Api/axios";
 import EditChannelModal from "./EditChannelModal";
 import DeleteChannelConfirmation from "./DeleteChannelConfirmation";
+import { FaPlus, FaEllipsisVertical } from "react-icons/fa6";
 
 // Example type: adapt to your actual server-info shape
 interface ServerInfo {
@@ -12,6 +13,7 @@ interface ServerInfo {
   serverName: string;
   serverDescription?: string;
   avatarUrl?: string;  // If you store an avatar for the server
+  ownerId: number;     // If you store the server owner
 }
 
 interface ChannelData {
@@ -55,7 +57,8 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
             serverId,
             serverName: resp.data.serverName,
             serverDescription: resp.data.description,
-            avatarUrl: undefined
+            avatarUrl: undefined,
+            ownerId: resp.data.ownerId,
           });
         }
       })
@@ -149,7 +152,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   };
 
   return (
-    <div className="w-56 bg-gray-900 p-3 flex flex-col text-white">
+    <div className="w-56 bg-gray-900 border-l border-y border-gray-700 p-3 flex flex-col text-white">
       {/** SERVER INFO */}
       {serverInfo && (
         <div className="flex items-center space-x-2 mb-4">
@@ -162,9 +165,17 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       )}
 
       {/** CHANNELS HEADER + "+" BUTTON */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 border-b border-gray-700 pb-2">
         <span className="text-sm font-semibold">Channels</span>
-        <button onClick={() => setShowCreateChannel(true)}>+</button>
+        {serverInfo?.ownerId === auth.userId && (
+          <button
+            onClick={() => setShowCreateChannel(true)}
+            className="text-xl font-bold hover:text-yellow-500"
+            aria-label="Add Channel"
+          >
+            <FaPlus size={13}/>
+          </button>
+        )}
       </div>
 
       {/** CHANNEL LIST */}
@@ -179,12 +190,14 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
               <ChannelButton name={`#${ch.name}`} />
             </button>
             {/** Dropdown toggle */}
+            {serverInfo?.ownerId === auth.userId && (
             <button
               onClick={() => toggleChannelMenu(ch.id)}
-              className="text-sm text-gray-400 hover:text-white ml-2"
+              className="text-sm text-gray-400 hover:text-yellow-500 ml-2"
             >
-              ⋮
+              <FaEllipsisVertical size={15}/>
             </button>
+            )}
             {openChannelMenu === ch.id && (
               <div className="absolute right-0 top-full bg-gray-700 rounded shadow z-10 mt-1">
                 <button
@@ -194,7 +207,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
                   Edit
                 </button>
                 <button
-                  className="block w-full px-4 py-2 text-left hover:bg-gray-600"
+                  className="block w-full px-4 py-2 text-left hover:bg-red-500"
                   onClick={() => openDelete(ch)}
                 >
                   Delete

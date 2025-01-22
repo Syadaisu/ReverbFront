@@ -5,6 +5,7 @@ import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
 import EditServerModal from "./EditServerModal";
 import DeleteServerConfirmation from "./DeleteServerConfirmation";
+import { FaLink, FaPlus } from "react-icons/fa6";
 
 interface ServerData {
   id: number;
@@ -127,7 +128,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-900 p-2" style={{ width: "4.5rem" }}>
+    <div className="flex flex-col items-center bg-gray-900 border-y border-gray-700 p-2" style={{ width: "4.5rem" }}>
       {servers.map((srv) => (
         <div key={srv.id} className="relative mb-2">
           <button
@@ -143,7 +144,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
 
           {/** Dropdown for Edit/Delete */}
           {openServerDropdown === srv.id.toString() && (
-            <div className="absolute left-full top-0 ml-2 bg-gray-700 p-2 rounded shadow z-10">
+            <div className="absolute left-full top-0 ml-2 bg-gray-700 rounded shadow z-10 mt-1">
               <button
                 className="block w-full text-left px-4 py-2 hover:bg-gray-600"
                 onClick={() => handleOpenEdit(srv)}
@@ -151,7 +152,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
                 Edit
               </button>
               <button
-                className="block w-full text-left px-4 py-2 hover:bg-gray-600"
+                className="block w-full text-left px-4 py-2 hover:bg-red-500"
                 onClick={() => handleOpenDelete(srv)}
               >
                 Delete
@@ -163,12 +164,12 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
 
       {/** “Create Server” button */}
       <div onClick={() => setShowCreateServer(true)}>
-        <IconButton icon="+" name="Create Server" />
+        <IconButton icon={<FaPlus size="17" />} name="Create Server" />
       </div>
 
       {/** “Join Server” button */}
       <div onClick={() => setShowJoinServer(true)}>
-        <IconButton icon="🔗" name="Join Server" />
+        <IconButton icon={<FaLink size="18" />} name="Join Server" />
       </div>
 
       {/** CREATE SERVER MODAL */}

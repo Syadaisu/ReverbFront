@@ -37,7 +37,7 @@ export interface MessageProps {
   channelId: string;
   authorId: string;
   body: string;
-  timestamp: string;
+  creationDate: string;
   attachment?: "";
 }
 

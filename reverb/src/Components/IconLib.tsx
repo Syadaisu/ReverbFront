@@ -1,4 +1,5 @@
 import { AVATAR_URL, BASE_URL } from "../Api/axios";
+import { FaUserCog } from "react-icons/fa";
 
 interface ServerButtonProps {
   name: string;
@@ -107,7 +108,7 @@ export const ServerIcon = ({ name, picture }: ServerButtonProps) => {
   console.log(avatar);
   return (
     <div
-      className='group font-semibold relative flex items-center justify-center h-12 w-12 text-primary rounded-3xl duration-300'
+      className='group font-semibold relative flex items-center justify-center h-10 w-10 text-primary rounded-3xl duration-300'
       style={{ backgroundColor: letterToColor[name[0].toLowerCase()], }}>
       {avatar ? (
         <picture
@@ -155,14 +156,54 @@ export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
 
   return (
     <div
-      className='group font-semibold relative flex items-center justify-center h-12 w-12 text-primary rounded-3xl duration-300'
-      style={{ backgroundColor }}>
+      className="group relative flex items-center justify-center h-12 w-12 text-primary rounded-full transition-all duration-300 ease-linear cursor-pointer"
+      style={{ backgroundColor }}
+    >
       {avatar ? (
         <picture
-          className='group bg-center bg-cover w-full h-full rounded-full'
-          style={{ backgroundImage: `url(${avatar})` }}></picture>
+          className="bg-center bg-cover w-full h-full rounded-full"
+          style={{ backgroundImage: `url(${avatar})` }}
+        ></picture>
       ) : (
-        name ? name[0].toUpperCase() : ''
+        <span className="text-lg font-semibold">{name ? name[0].toUpperCase() : ''}</span>
+      )}
+
+      {/* Overlay on Hover */}
+      <div className="absolute inset-0 bg-yellow-500 bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center rounded-full">
+        {/* Cog Icon */}
+        <FaUserCog className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+    </div>
+  );
+};
+
+export const UserIcon = ({ name, picture, refreshflag }: UserAvatarProps) => {
+  const defaultColor = "#039be5";
+  var avatar = null;
+  const cacheBuster = refreshflag;
+  console.log(picture);
+  if (picture !== BASE_URL + AVATAR_URL + "undefined") {
+    avatar = `${picture}?cb=${cacheBuster}`;
+  }
+  console.log(avatar);
+  let backgroundColor = defaultColor;
+  if (name) {
+    const firstLetter = name[0].toLowerCase();
+    backgroundColor = letterToColor[firstLetter] || defaultColor;
+  }
+
+  return (
+    <div
+      className="group relative flex items-center justify-center h-12 w-12 text-primary rounded-full transition-all duration-300 ease-linear cursor-default"
+      style={{ backgroundColor }}
+    >
+      {avatar ? (
+        <picture
+          className="bg-center bg-cover w-full h-full rounded-full"
+          style={{ backgroundImage: `url(${avatar})` }}
+        ></picture>
+      ) : (
+        <span className="text-lg font-semibold">{name ? name[0].toUpperCase() : ''}</span>
       )}
     </div>
   );

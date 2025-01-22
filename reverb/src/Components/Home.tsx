@@ -40,26 +40,16 @@ const Home = () => {
 
   return (
     <div className="w-screen h-screen flex bg-gray-800 text-white">
-      {/** LEFT SIDE: ServerBar (always visible) */}
-      <ServerBar
-        onSelectServer={(serverId: number) => {
-          // When user selects a server, reset channel to null
-          console.log("Selected server:", serverId); // debug check
-          setSelectedServerId(serverId);
-          setSelectedChannelId(null);
-        }}
-      />
-
       {/** MAIN AREA */}
       <div className="flex-grow flex flex-col">
         {/** TOP BAR */}
-        <div className="h-12 bg-gray-700 px-4 flex items-center justify-between">
-          <div className="font-semibold">
+        <div className="h-16 bg-gray-700 px-4 flex items-center justify-between">
+          <div className="font-semibold text-lg">
             Welcome, {auth?.username}!
           </div>
 
           {/** User Avatar + Dropdown */}
-          <div className="relative">
+          <div className="relative pt-2">
             <button onClick={() => setUserMenuOpen(!userMenuOpen)}>
               <UserAvatar
                 name={auth.username}
@@ -68,7 +58,7 @@ const Home = () => {
               />
             </button>
             {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-gray-700 rounded shadow-md z-10">
+              <div className="absolute right-0 mt-0 w-40 bg-gray-700 rounded shadow-md z-10">
                 <button
                   className="block w-full text-left px-4 py-2 hover:bg-gray-600"
                   onClick={() => {
@@ -88,7 +78,7 @@ const Home = () => {
                   Change Avatar
                 </button>
                 <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-600"
+                  className="block w-full text-left px-4 py-2 hover:bg-red-500"
                   onClick={() => {
                     handleLogout();
                     console.log("Logging out...");
@@ -102,6 +92,15 @@ const Home = () => {
         </div>
 
         <div className="flex flex-grow overflow-hidden">
+          {/** LEFT SIDE: ServerBar (always visible) */}
+          <ServerBar
+            onSelectServer={(serverId: number) => {
+              // When user selects a server, reset channel to null
+              console.log("Selected server:", serverId); // debug check
+              setSelectedServerId(serverId);
+              setSelectedChannelId(null);
+            }}
+          />
           {/** CHANNEL BAR */}
           {selectedServerId ? (
             <ChannelBar
@@ -109,8 +108,7 @@ const Home = () => {
               onChannelSelect={(channelId: number) => setSelectedChannelId(channelId)}
             />
           ) : (
-            <div className="w-56 bg-gray-900 p-3">
-              <p className="text-gray-500">Select a server</p>
+            <div> 
             </div>
           )}
 

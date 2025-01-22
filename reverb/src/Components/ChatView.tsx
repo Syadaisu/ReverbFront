@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useStomp } from "../Hooks/useStomp";
+import { useStomp, MessageProps } from "../Hooks/useStomp";
 import useAuth from "../Hooks/useAuth";
-import { getChannel, getChannelMessages } from "../Api/axios";
+import { getChannel, getChannelMessages, getUser, BASE_URL, AVATAR_URL } from "../Api/axios";
+import { UserIcon } from "./IconLib";
 
 interface ChannelInfo {
   channelId: number;
@@ -19,8 +20,14 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const stomp = useStomp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MessageProps[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [userList, setUserList] = useState<any[]>([]);
+
+
+
+
+
 
   // Fetch existing messages on channel change
   useEffect(() => {
@@ -46,9 +53,68 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       })
       .catch((err) => console.error("Failed to fetch channel messages:", err));
 
-
+      
       console.log("Channel Info: ", channelInfo);
   }, [channelId, auth]);
+
+
+
+
+
+
+
+
+
+
+  useEffect(() => {
+  if (!auth?.accessToken || messages.length === 0) return;
+
+  // Extract current user IDs from userList for easy lookup
+  const existingUserIds = new Set(userList.map(user => user.userId));
+
+  // Gather unique authorIds that are not in userList
+  const userIdsToFetch = Array.from(
+    new Set(
+      messages
+        .map(msg => msg.authorId)
+        .filter(authorId => !existingUserIds.has(authorId))
+    )
+  );
+
+  if (userIdsToFetch.length === 0) return;
+
+  console.log("User IDs to fetch: ", userIdsToFetch);
+
+  // Create an array of getUser promises
+  const userFetchPromises = userIdsToFetch.map(userId => {
+    console.log("Fetching user with id: ", userId);
+    return getUser(auth.accessToken, Number(userId))
+      .then(resp => resp.data)
+      .catch(error => {
+        console.error(`Error fetching user with ID ${userId}:`, error);
+        return null; // Handle individual fetch errors gracefully
+      });
+  });
+
+  // Execute all getUser calls concurrently
+  Promise.all(userFetchPromises)
+    .then(fetchedUsers => {
+      // Filter out any failed fetches (null values)
+      const validUsers = fetchedUsers.filter(user => user !== null);
+
+      if (validUsers.length > 0) {
+        setUserList(prev => [...prev, ...validUsers]);
+      }
+    })
+    .catch(error => {
+      console.error("Error fetching users:", error);
+    });
+
+}, [messages, auth, userList]);
+
+
+
+
 
   // Subscribe to new messages in real-time
   useEffect(() => {
@@ -58,6 +124,8 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
         setMessages((prev) => [...prev, newMsg]);
       }
     });
+    console.log("userList: ", userList);
+    console.log("messages: ", messages);
     return () => {
       sub?.unsubscribe();
     };
@@ -80,6 +148,10 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       .catch(console.error);
   };
 
+
+  
+
+
   const handleSend = () => {
     if (!inputValue.trim()) return;
     if (!stomp) return;
@@ -99,22 +171,38 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     <div className="flex flex-col h-full">
       {/** Channel Header */}
       {channelInfo && (
-      <div className="bg-gray-700 p-4 border-b border-gray-600">
-        
-        <h2 className="text-2xl font-bold">{channelInfo.channelName}</h2>
-
-        {channelInfo.channelDescription && (
-          <p className="text-sm text-gray-300 mt-1">{channelInfo.channelDescription}</p>
-        )}
-      </div>
+        <div className="bg-gray-900 p-4 border-y border-gray-700">
+          <h2 className="text-2xl font-bold">{channelInfo.channelName}</h2>
+          {channelInfo.channelDescription && (
+            <p className="text-sm text-gray-300 mt-1">{channelInfo.channelDescription}</p>
+          )}
+        </div>
       )}
       {/* Messages list */}
       <div className="flex-grow overflow-y-auto bg-gray-800 p-3 space-y-2">
-        {messages.map((msg, i) => (
-          <div key={i} className="bg-gray-700 p-2 rounded">
-            <span className="font-bold">{msg.authorId}:</span> {msg.body}
-          </div>
-        ))}
+        {messages.map((msg) => {
+          const user = userList.find((user) => user.userId === msg.authorId);
+          return (
+            <div key={msg.id} className="bg-gray-700 p-2 rounded flex items-start">
+              {user ? (
+                <UserIcon name = {user.userName} picture = {BASE_URL+AVATAR_URL+user.avatarUuid} />
+              ) : (
+                <UserIcon name = "Unknown User" />
+              )} 
+              <div>
+                <div className="flex items-center">
+                  <span className="font-bold text-white mr-2">
+                    {user ? user.userName : 'Unknown User'}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(msg.creationDate).toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-gray-200">{msg.body}</div>
+              </div>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -122,14 +210,19 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       <div className="p-2 bg-gray-700 flex">
         <input
           type="text"
-          className="flex-grow p-2 rounded-l bg-gray-900 outline-none"
+          className="flex-grow p-2 rounded-l bg-gray-900 outline-none text-white"
           placeholder="Type a message..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSend();
+            }
+          }}
         />
         <button
           onClick={handleSend}
-          className="px-4 py-2 bg-gray-500 rounded-r hover:bg-gray-400"
+          className="px-4 py-2 bg-gray-500 rounded-r hover:bg-gray-400 text-white font-semibold"
         >
           Send
         </button>

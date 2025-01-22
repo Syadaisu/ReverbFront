@@ -10,6 +10,7 @@ const GET_CHANNEL = '/channel/'
 const GET_USERBYEMAIL = '/user/getByEmail/'
 const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
+const GET_USER = '/user/getUser/'
 
 export const AVATAR_URL = '/attachment/view/'
 const JOIN_SERVER = '/server/join'
@@ -134,6 +135,21 @@ export const getChannelMessages = async (token: string, channelId: number) => {
     return response;
 
 };
+
+export const getUser = async (token: string, userId: number) => {
+    console.log("Getting user with id: ", userId);
+    const response = await axios.get(
+        BASE_URL+GET_USER+userId,
+        {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        },
+    );
+    console.log ("Response: ", response);
+    return response;
+}
 
 export const joinServer = async (token: string, serverName: string, userId: number) => {
     // Create URLSearchParams to format data as application/x-www-form-urlencoded
