@@ -189,7 +189,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
               ) : (
                 <UserIcon name = "Unknown User" />
               )} 
-              <div>
+              <div className="ml-2">
                 <div className="flex items-center">
                   <span className="font-bold text-white mr-2">
                     {user ? user.userName : 'Unknown User'}

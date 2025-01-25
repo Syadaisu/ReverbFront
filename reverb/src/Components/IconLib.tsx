@@ -82,7 +82,8 @@ export const letterToColor: { [key: string]: string } = {
 
 export const ServerButton = ({ name, picture }: ServerButtonProps) => (
   <div
-    className='group font-semibold relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto text-primary hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer'
+    className='group font-semibold relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto 
+    text-primary hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer'
     style={{
       backgroundColor: letterToColor[name[0].toLowerCase()],
     }}>
@@ -94,7 +95,8 @@ export const ServerButton = ({ name, picture }: ServerButtonProps) => (
       name[0].toUpperCase()
     )}
 
-    <span className='group-hover:scale-100 z-50 absolute w-auto p-2 m-2 min-w-max top-11 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-bottom'>
+    <span className='group-hover:scale-100 z-50 absolute w-auto p-2 m-2 min-w-max top-11 rounded-md shadow-md text-white 
+    bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-bottom'>
       {name}
     </span>
   </div>
