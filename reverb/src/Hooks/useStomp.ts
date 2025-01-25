@@ -157,7 +157,7 @@ export const useStomp = () => {
       body,
       responseToId: "",
       responseTo: "",
-      attachment: 0,
+      attachment: 0
     });
   };
 
@@ -203,7 +203,7 @@ export const useStomp = () => {
     });
   };
 
-  const onMessageSent = (serverId: string, channelId: number, callback: (event: MessageProps) => void) => {
+  const onMessageSent = (channelId: number, callback: (event: MessageProps) => void) => {
     const destination = `/topic/channel.${channelId}.message.added`;
     console.log("Subscribing to:", destination);
     return subscribe(destination, (msg) => {
