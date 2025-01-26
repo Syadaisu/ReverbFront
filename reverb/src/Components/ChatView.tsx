@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useStomp, MessageProps } from "../Hooks/useStomp";
 import useAuth from "../Hooks/useAuth";
-import { getChannel, getChannelMessages, getUser, BASE_URL, AVATAR_URL } from "../Api/axios";
+import { getChannel, getChannelMessages, getUser, BASE_URL, AVATAR_URL, uploadFile } from "../Api/axios";
 import { UserIcon } from "./IconLib";
 import SearchBar from "./SearchBar";
 import { MdSend } from "react-icons/md";
+import { url } from "inspector";
+import ChatInputRow from "./ChatInputRow";
 
 interface ChannelInfo {
   channelId: number;
@@ -27,6 +29,8 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const [userList, setUserList] = useState<any[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<MessageProps[]>([]);
   const [searchValue , setSearchValue] = useState("");
+  const [isAttachingFile, setIsAttachingFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 
   const handleFilterMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,18 +167,27 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   
 
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  // This function is for normal text messages
+  const handleSendText = (text: string) => {
     if (!stomp) return;
+    stomp.sendMessage(channelId, auth.userId, text, "");
+  };
 
-    // Send the message
-    stomp.sendMessage(channelId, auth.userId, inputValue.trim());
+  // This function is for file attachments
+  const handleSendFile = async (file: File) => {
+    try {
+      const response = uploadFile(auth.accessToken, file)
+      
+      console.log("File upload response: ", response);
 
-    // Clear input
-    setInputValue("");
+      const attachmentUuid = (await response).data;
 
-    // Optionally refetch or just rely on the STOMP event:
-    // refetchMessages();
+      // 2) Then send the STOMP message with empty body but an attachmentUuid
+      stomp.sendMessage(channelId, auth.userId, "", attachmentUuid);
+      
+    } catch (error) {
+      console.error("Error uploading file or sending message:", error);
+    }
   };
 
   return (
@@ -221,7 +234,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
                     {new Date(msg.creationDate).toLocaleString()}
                   </span>
                 </div>
-                <div className="text-gray-200">{msg.body}</div>
+                <div className="text-gray-200">{renderMessageContent(msg)}</div>
               </div>
             </div>
           );
@@ -234,29 +247,27 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input box */}
-      <div className="p-2 bg-gray-700 flex">
-      <input
-  type="text"
-  className="flex-grow p-2 rounded-l bg-gray-900 outline-none text-white"
-  placeholder="Type a message..."
-  value={inputValue}
-  onChange={(e) => setInputValue(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      handleSend();
-    }
-  }}
-/>
-        <button
-          onClick={handleSend}
-          className="px-4 py-2 bg-gray-500 rounded-r hover:bg-gray-400 text-white font-semibold justify-center gap-1 flex items-center"
-        >
-          Send <MdSend/>
-        </button>
-      </div>
+      {/* Input box with toggle for attaching vs text */}
+      <ChatInputRow
+        onSendText={handleSendText}
+        onSendFile={handleSendFile}
+      />
     </div>
   );
 };
 
+
+const renderMessageContent = (msg: MessageProps) => {
+  if (msg.body && msg.body.trim() !== "") {
+    return <div className="text-gray-200">{msg.body}</div>;
+  } else if (msg.attachmentUuid) {
+    const url = BASE_URL + AVATAR_URL + msg.attachmentUuid;
+    console.log("Attachment URL: ", url);
+    return (
+      <img loading="lazy" src={url} className='max-h-96 max-w-96' alt="attachement" />
+    );
+  } else {
+    return <div className="text-gray-400 italic">Empty message</div>;
+  }
+};
 export default ChatView;

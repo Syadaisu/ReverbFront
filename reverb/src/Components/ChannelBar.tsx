@@ -12,7 +12,7 @@ interface ServerInfo {
   serverId: number;
   serverName: string;
   serverDescription?: string;
-  avatarUrl?: string;  // If you store an avatar for the server
+  serverIconUuid?: string;  // If you store an avatar for the server
   ownerId: number;     // If you store the server owner
 }
 
@@ -57,7 +57,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
             serverId,
             serverName: resp.data.serverName,
             serverDescription: resp.data.description,
-            avatarUrl: undefined,
+            serverIconUuid: resp.data.serverIconUuid,
             ownerId: resp.data.ownerId,
           });
         }
@@ -156,7 +156,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       {/** SERVER INFO */}
       {serverInfo && (
         <div className="flex items-center space-x-2 mb-4">
-          <ServerIcon name={serverInfo.serverName} picture={serverInfo.avatarUrl} />
+          <ServerIcon name={serverInfo.serverName} picture={serverInfo.serverIconUuid} />
           <h2 className="text-lg font-bold">{serverInfo.serverName}</h2>
           {serverInfo.serverDescription && (
           <p className="text-sm text-gray-400 mt-1">{serverInfo.serverDescription}</p>

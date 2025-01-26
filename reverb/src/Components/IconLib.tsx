@@ -80,17 +80,24 @@ export const letterToColor: { [key: string]: string } = {
   z: "#FFC300",
 };
 
-export const ServerButton = ({ name, picture }: ServerButtonProps) => (
+export const ServerButton = ({ name, picture }: ServerButtonProps) => {
+  var avatar = null;
+  console.log ("picture:", picture);
+  if (picture !== undefined) {
+    avatar = BASE_URL+AVATAR_URL+picture;
+  }
+  
+  return(
   <div
     className='group font-semibold relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto 
     text-primary hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer'
     style={{
       backgroundColor: letterToColor[name[0].toLowerCase()],
     }}>
-    {picture ? (
+    {avatar ? (
       <picture
         className='group bg-center bg-cover w-full h-full rounded-full hover:bg-center hover:bg-cover hover:w-full hover:h-full'
-        style={{ backgroundImage: `url(${picture})` }}></picture>
+        style={{ backgroundImage: `url(${avatar})` }}></picture>
     ) : (
       name[0].toUpperCase()
     )}
@@ -101,13 +108,15 @@ export const ServerButton = ({ name, picture }: ServerButtonProps) => (
     </span>
   </div>
 );
+};
 
 export const ServerIcon = ({ name, picture }: ServerButtonProps) => {
   var avatar = null;
-  if (picture !== BASE_URL + AVATAR_URL + "undefined") {
-    avatar = picture;
+  if (picture !== undefined) {
+    avatar = BASE_URL+AVATAR_URL+picture;
   }
-  console.log(avatar);
+
+  console.log("picture:",avatar, picture);
   return (
     <div
       className='group font-semibold relative flex items-center justify-center h-10 w-10 text-primary rounded-3xl duration-300'

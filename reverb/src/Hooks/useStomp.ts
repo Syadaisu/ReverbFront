@@ -38,7 +38,7 @@ export interface MessageProps {
   authorId: string;
   body: string;
   creationDate: string;
-  attachment?: "";
+  attachmentUuid?: string;
 }
 
 export interface ServerProps {
@@ -48,6 +48,7 @@ export interface ServerProps {
   ownerId: string;
   memberIds: string[];
   channelIds: string[];
+  serverIconUuid?: string;
 }
 
 export const useStomp = () => {
@@ -149,15 +150,15 @@ export const useStomp = () => {
     publish("/app/deleteChannel", { serverId, channelId });
   };
 
-  const sendMessage = (channelId: number, authorId: number, body: string) => {
-    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body);
+  const sendMessage = (channelId: number, authorId: number, body: string, attachmentUuid: string) => {
+    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid);
     publish("/app/addMessage", {
       channelId,
       authorId,
       body,
       responseToId: "",
       responseTo: "",
-      attachment: 0
+      attachmentUuid: attachmentUuid,
     });
   };
 

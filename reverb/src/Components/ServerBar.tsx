@@ -6,11 +6,13 @@ import { useStomp } from "../Hooks/useStomp";
 import EditServerModal from "./EditServerModal";
 import DeleteServerConfirmation from "./DeleteServerConfirmation";
 import { FaLink, FaPlus } from "react-icons/fa6";
+import UpdateServerIcon from "./UpdateServerIcon";
 
 interface ServerData {
   id: number;
   name: string;
   description?: string;
+  serverIconUuid?: string;
 }
 
 interface ServerBarProps {
@@ -32,6 +34,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
   // “Edit” / “Delete” modals
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showIconUploadModal, setShowIconUploadModal] = useState(false);
   const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
 
   // Dropdown state (which server is toggled)
@@ -41,12 +44,15 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
     if (!auth?.accessToken) return;
     getUserServers(auth.accessToken, auth.userId)
       .then((resp) => {
+        console.log("User servers:", resp.data);
         if (Array.isArray(resp.data)) {
           const transformed = resp.data.map((srv: any) => ({
-            id: srv.serverId.toString(),
+            id: srv.serverId,
             name: srv.serverName,
             description: srv.description,
+            serverIconUuid: srv.serverIconUuid,
           }));
+          console.log("Transformed servers:", transformed);
           setServers(transformed);
         }
       })
@@ -61,7 +67,9 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         id: Number(event.id),
         name: event.name || "Unnamed Server",
         description: event.description,
+        serverIconUuid: event.serverIconUuid,
       };
+      console.log("New server created:", newServer);
       setServers((prev) => [...prev, newServer]);
     });
     return () => {
@@ -79,6 +87,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
             id: srv.serverId.toString(),
             name: srv.serverName,
             description: srv.description,
+            serverIconUuid: srv.serverIconUuid,
           }));
           setServers(transformed);
         }
@@ -115,6 +124,12 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
     setOpenServerDropdown(null);
   };
 
+  const handleIconUpload = (server: ServerData) => {
+    setSelectedServer(server);
+    setShowIconUploadModal(true);
+    setOpenServerDropdown(null);
+  }
+
   // DELETE server
   const handleOpenDelete = (server: ServerData) => {
     setSelectedServer(server);
@@ -139,7 +154,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
               toggleServerDropdown(srv.id.toString());
             }}
           >
-            <ServerButton name={srv.name} />
+            <ServerButton name={srv.name} picture={srv.serverIconUuid} />
           </button>
 
           {/** Dropdown for Edit/Delete */}
@@ -150,6 +165,12 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
                 onClick={() => handleOpenEdit(srv)}
               >
                 Edit
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-600"
+                onClick={() => handleIconUpload(srv)}
+              >
+                Change Icon
               </button>
               <button
                 className="block w-full text-left px-4 py-2 hover:bg-red-500"
@@ -236,6 +257,15 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
           currentDesc={selectedServer.description}
           onClose={() => setShowEditModal(false)}
           onSuccess={refetchServers}
+        />
+      )}
+
+      {/** UPLOAD SERVER ICON MODAL */}
+      {showIconUploadModal && selectedServer && (
+        <UpdateServerIcon
+          serverId={selectedServer.id}
+          onClose={() => setShowIconUploadModal(false)}
+          onUploadSuccess={refetchServers}
         />
       )}
 

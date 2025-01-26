@@ -12,6 +12,8 @@ const GET_USERSERVERS = '/server/getByUser/'
 const GET_CHANNELMESSAGES = '/message/getByChannel/'
 const GET_USER = '/user/getUser/'
 
+const UPLOAD_FILE = '/attachment/uploadFile'
+const UPLOAD_SERVERICON = '/server/avatar/'
 export const AVATAR_URL = '/attachment/view/'
 const JOIN_SERVER = '/server/join'
 
@@ -204,6 +206,39 @@ export const uploadAvatar = async (token: string, userId: number, file: File) =>
         );
         return response;
     };
+
+export const uploadServerIcon = async (token: string, serverId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await axios.put(
+        BASE_URL + UPLOAD_SERVERICON + serverId,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+}
+
+export const uploadFile = async (token: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post(
+        BASE_URL + UPLOAD_FILE,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
 
 export const editServer = async (token: string, serverId: number, serverName?: string, serverDescription?: string) => {
     const response = await axios.put(
