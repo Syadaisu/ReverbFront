@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { ChannelButton, ServerButton, ServerIcon, UserAvatar } from "./IconLib";
+import { ChannelButton, ServerIcon } from "./IconLib";
 import { useStompContext } from "../Hooks/useStompContext";
 import useAuth from "../Hooks/useAuth";
-import { getChannels, getServer } from "../Api/axios";
+import { getChannels, getServer, getAdminsByIds } from "../Api/axios";
 import EditChannelModal from "./EditChannelModal";
 import DeleteChannelConfirmation from "./DeleteChannelConfirmation";
 import { FaPlus, FaEllipsisVertical } from "react-icons/fa6";
@@ -13,7 +13,7 @@ interface ServerInfo {
   serverName: string;
   serverDescription?: string;
   serverIconUuid?: string;  // If you store an avatar for the server
-  ownerId: number;     // If you store the server owner
+  ownerId: number;          // The server's owner ID
 }
 
 interface ChannelData {
@@ -32,24 +32,31 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   const { auth } = useAuth();
   const stomp = useStompContext();
 
-  // Could store server info if you want to show an avatar or name
+  // Store server info for name/avatar/owner
   const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
 
-  const [channels, setChannels] = useState<any[]>([]);
+  // Store the list of authorized user IDs
+  const [authorizedUserIds, setAuthorizedUserIds] = useState<number[]>([]);
+
+  // Channels array
+  const [channels, setChannels] = useState<ChannelData[]>([]);
+  
+  // Modal states
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [chName, setChName] = useState("");
   const [chDesc, setChDesc] = useState("");
 
-  // Dropdown for channel Edit/Delete
+  // Channel dropdown logic
   const [openChannelMenu, setOpenChannelMenu] = useState<string | null>(null);
-
-  // Channel modals
   const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // (Optional) fetch or store server info
+  // ---------------------------
+  // Fetch server info
+  // ---------------------------
   useEffect(() => {
+    if (!auth?.accessToken) return;
     getServer(auth.accessToken, serverId)
       .then((resp) => {
         if (resp.data) {
@@ -63,9 +70,29 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
         }
       })
       .catch(console.error);
-  }, [serverId]);
+  }, [serverId, auth]);
 
-  // Initially fetch channels
+  // ---------------------------
+  // Fetch server admins (authorized users)
+  // ---------------------------
+  useEffect(() => {
+    if (!auth?.accessToken) return;
+    if (!serverInfo) return; // Wait until we have server info
+    // Suppose your method is getAdminsByIds(token, serverId) 
+    getAdminsByIds(auth.accessToken, serverId)
+      .then((resp) => {
+        if (Array.isArray(resp.data)) {
+          setAuthorizedUserIds(resp.data as number[]);
+        } else {
+          setAuthorizedUserIds([]);
+        }
+      })
+      .catch(console.error);
+  }, [auth, serverId, serverInfo]);
+
+  // ---------------------------
+  // Fetch channels
+  // ---------------------------
   useEffect(() => {
     if (!auth?.accessToken) return;
     getChannels(auth.accessToken, serverId.toString())
@@ -83,12 +110,12 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       .catch(console.error);
   }, [auth, serverId]);
 
-  // Subscribe to new channel events
+  // ---------------------------
+  // STOMP subscription for channel creation
+  // ---------------------------
   useEffect(() => {
     if (!stomp || !stomp.connected || !serverId) return;
-    console.log("Subscribing to channel events for server", serverId, stomp);
     const sub = stomp.onChannelCreated(serverId.toString(), (channel) => {
-      console.log("Channel event ",channel);
       if (channel) {
         const newChannel = {
           id: channel.channelId.toString(),
@@ -97,14 +124,12 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
           serverId: serverId.toString()
         };
         setChannels((prev) => [...prev, newChannel]);
-        console.log("New channel added", newChannel);
       }
-      
     });
     return () => sub?.unsubscribe();
   }, [stomp, serverId]);
 
-  // Helper to re-fetch channels
+  // Helper: re-fetch channels
   const refetchChannels = () => {
     if (!auth?.accessToken) return;
     getChannels(auth.accessToken, serverId.toString())
@@ -122,9 +147,19 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       .catch(console.error);
   };
 
-  // Create a channel
+  // ---------------------------
+  // Permission checks
+  // ---------------------------
+  const isOwner = serverInfo?.ownerId === auth.userId;
+  // If the user is in authorizedUserIds or is the owner
+  const isAuthorized = isOwner || (authorizedUserIds.includes(auth.userId));
+
+  // ---------------------------
+  // Creating a channel
+  // ---------------------------
   const handleCreateChannel = () => {
     if (!chName.trim()) return;
+    // Using STOMP
     stomp.createChannel(serverId.toString(), chName, chDesc);
     setChName("");
     setChDesc("");
@@ -137,14 +172,14 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
     setOpenChannelMenu((prev) => (prev === channelId ? null : channelId));
   };
 
-  // Edit channel
+  // Edit channel (owner or admin)
   const openEdit = (channel: ChannelData) => {
     setSelectedChannel(channel);
     setShowEditModal(true);
     setOpenChannelMenu(null);
   };
 
-  // Delete channel
+  // Delete channel (owner only)
   const openDelete = (channel: ChannelData) => {
     setSelectedChannel(channel);
     setShowDeleteModal(true);
@@ -153,21 +188,24 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
 
   return (
     <div className="w-56 bg-gray-900 border-l border-y border-gray-700 p-3 flex flex-col text-white">
-      {/** SERVER INFO */}
+      {/* SERVER INFO */}
       {serverInfo && (
-        <div className="flex items-center space-x-2 mb-4">
-          <ServerIcon name={serverInfo.serverName} picture={serverInfo.serverIconUuid} />
-          <h2 className="text-lg font-bold">{serverInfo.serverName}</h2>
+        <div className="flex flex-col mb-4">
+          <div className="flex items-center space-x-2">
+            <ServerIcon name={serverInfo.serverName} picture={serverInfo.serverIconUuid} />
+            <h2 className="text-lg font-bold">{serverInfo.serverName}</h2>
+          </div>
           {serverInfo.serverDescription && (
-          <p className="text-sm text-gray-400 mt-1">{serverInfo.serverDescription}</p>
-        )}
+            <p className="text-sm text-gray-400 mt-1">{serverInfo.serverDescription}</p>
+          )}
         </div>
       )}
 
-      {/** CHANNELS HEADER + "+" BUTTON */}
+      {/* CHANNELS HEADER */}
       <div className="flex items-center justify-between mb-2 border-b border-gray-700 pb-2">
         <span className="text-sm font-semibold">Channels</span>
-        {serverInfo?.ownerId === auth.userId && (
+        {/* Only show "+" if user is authorized or owner */}
+        {isAuthorized && (
           <button
             onClick={() => setShowCreateChannel(true)}
             className="text-xl font-bold hover:text-yellow-500"
@@ -178,47 +216,54 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
         )}
       </div>
 
-      {/** CHANNEL LIST */}
+      {/* CHANNEL LIST */}
       <div className="space-y-2">
-        {channels.map((ch) => (
-          <div key={ch.id} className="relative flex items-center">
-            {/** Click the channel name to select */}
-            <button
-              className="text-left flex-grow"
-              onClick={() => onChannelSelect(parseInt(ch.id))}
-            >
-              <ChannelButton name={`#${ch.name}`} />
-            </button>
-            {/** Dropdown toggle */}
-            {serverInfo?.ownerId === auth.userId && (
-            <button
-              onClick={() => toggleChannelMenu(ch.id)}
-              className="text-sm text-gray-400 hover:text-yellow-500 ml-2"
-            >
-              <FaEllipsisVertical size={15}/>
-            </button>
-            )}
-            {openChannelMenu === ch.id && (
-              <div className="absolute right-0 top-full bg-gray-700 rounded shadow z-10 mt-1">
+        {channels.map((ch) => {
+          return (
+            <div key={ch.id} className="relative flex items-center">
+              {/* Click the channel name to select */}
+              <button
+                className="text-left flex-grow"
+                onClick={() => onChannelSelect(parseInt(ch.id))}
+              >
+                <ChannelButton name={`#${ch.name}`} />
+              </button>
+              {/* If user can at least edit channel => show dropdown toggle */}
+              {isAuthorized && (
                 <button
-                  className="block w-full px-4 py-2 text-left hover:bg-gray-600"
-                  onClick={() => openEdit(ch)}
+                  onClick={() => toggleChannelMenu(ch.id)}
+                  className="text-sm text-gray-400 hover:text-yellow-500 ml-2"
                 >
-                  Edit
+                  <FaEllipsisVertical size={15}/>
                 </button>
-                <button
-                  className="block w-full px-4 py-2 text-left hover:bg-red-500"
-                  onClick={() => openDelete(ch)}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+              {/* Channel dropdown: "Edit" if authorized, "Delete" if owner */}
+              {openChannelMenu === ch.id && (
+                <div className="absolute right-0 top-full bg-gray-700 rounded shadow z-10 mt-1">
+                  {isAuthorized && (
+                    <button
+                      className="block w-full px-4 py-2 text-left hover:bg-gray-600"
+                      onClick={() => openEdit(ch)}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {isOwner && (
+                    <button
+                      className="block w-full px-4 py-2 text-left hover:bg-red-500"
+                      onClick={() => openDelete(ch)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/** CREATE CHANNEL MODAL */}
+      {/* CREATE CHANNEL MODAL */}
       {showCreateChannel && (
         <div className="absolute bg-gray-700 p-3 shadow rounded">
           <input
@@ -250,7 +295,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
         </div>
       )}
 
-      {/** EDIT CHANNEL MODAL */}
+      {/* EDIT CHANNEL MODAL */}
       {showEditModal && selectedChannel && (
         <EditChannelModal
           channelId={Number(selectedChannel.id)}
@@ -261,7 +306,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
         />
       )}
 
-      {/** DELETE CHANNEL CONFIRMATION */}
+      {/* DELETE CHANNEL CONFIRMATION */}
       {showDeleteModal && selectedChannel && (
         <DeleteChannelConfirmation
           channelId={Number(selectedChannel.id)}
