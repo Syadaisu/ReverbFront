@@ -24,6 +24,9 @@ const DELETE_SERVER = '/server/delete/'
 const EDIT_CHANNEL = '/channel/edit/'
 const DELETE_CHANNEL = '/channel/delete/'
 
+const GET_ADMINSBYIDS = '/server/getServerAdminIds/'
+const GRANTADMINBYEMAIL = '/server/grantAdminByEmail/'
+
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -299,3 +302,41 @@ export const deleteChannel = async (token: string, channelId: number) => {
     );
     return response;
 };
+
+
+export const getAdminsByIds = async (token: string, serverId: number) => {
+    const response = await axios.get(
+        BASE_URL + GET_ADMINSBYIDS + serverId,
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const grantAdminByEmail = async (
+    token: string,
+    serverId: number,
+    email: string
+  ) => {
+    const response = await axios.post(
+      `${BASE_URL}${GRANTADMINBYEMAIL}${serverId}`,
+      {}, // Empty body since email is in the query parameter
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          email: email,
+        },
+      }
+    );
+  
+    console.log('Response: ', response);
+    return response;
+  };
+  
