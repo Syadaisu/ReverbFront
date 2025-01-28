@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { uploadServerIcon } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface UpdateServerIconProps {
   serverId: number;
@@ -15,7 +16,8 @@ const UpdateServerIcon: React.FC<UpdateServerIconProps> = ({ onClose, onUploadSu
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
+  const stomp = useStompContext();
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -29,10 +31,12 @@ const UpdateServerIcon: React.FC<UpdateServerIconProps> = ({ onClose, onUploadSu
     try {
         console.log("serverId: ", serverId);
       await uploadServerIcon(auth.accessToken, serverId, iconFile);
+
       alert("Avatar updated successfully.");
       onUploadSuccess();
       // Optionally update local user context with new avatar path or refresh
       // e.g. setAuth({ ...auth, avatar: "some new avatar name" });
+      stomp.editServerSignal(serverId);
       onClose();
     } catch (err: any) {
       setError(err.message || "Error updating avatar");

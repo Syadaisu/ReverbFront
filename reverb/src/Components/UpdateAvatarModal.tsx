@@ -1,8 +1,9 @@
 // src/Components/UpdateAvatarModal.tsx
 
 import React, { useState } from "react";
-import { uploadAvatar } from "../Api/axios";
+import { uploadAvatar, getUser } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface UpdateAvatarModalProps {
   onClose: () => void;
@@ -10,10 +11,11 @@ interface UpdateAvatarModalProps {
 }
 
 const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({ onClose, onUploadSuccess }) => {
-  const { auth } = useAuth();
+  const { auth,setAuth } = useAuth();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const stomp = useStompContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +30,19 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({ onClose, onUpload
     try {
       await uploadAvatar(auth?.accessToken || "", auth.userId, avatarFile);
       alert("Avatar updated successfully.");
+      getUser(auth.accessToken, auth.userId)
+                .then((resp) => {
+                    if (resp.data) {
+                      console.log("resp.data.avatarUuid: " + resp.data.avatarUuid);
+                        setAuth((prev) => ({
+                            ...prev,
+                            avatar: resp.data.avatarUuid
+                        }));
+                    }
+                })
+                .catch(console.error);
       onUploadSuccess();
-      // Optionally update local user context with new avatar path or refresh
-      // e.g. setAuth({ ...auth, avatar: "some new avatar name" });
+      stomp.editUserSignal(auth.userId);
       onClose();
     } catch (err: any) {
       setError(err.message || "Error updating avatar");

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { deleteChannel } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface DeleteChannelConfirmationProps {
   channelId: number;
@@ -18,16 +19,19 @@ const DeleteChannelConfirmation: React.FC<DeleteChannelConfirmationProps> = ({
 }) => {
   const { auth } = useAuth();
   const [error, setError] = useState<string>("");
+  const stomp = useStompContext();
 
   const handleDelete = async () => {
     setError("");
     try {
       await deleteChannel(auth.accessToken, channelId);
       alert(`Channel "${channelName}" deleted successfully!`);
+      stomp.deleteChannelSignal(channelId);
       onClose();
       onDeleted && onDeleted();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to delete channel.");
+
     }
   };
 

@@ -4,6 +4,7 @@ import { FaUserCog } from "react-icons/fa";
 interface ServerButtonProps {
   name: string;
   picture?: string;
+  refreshflag?: number;
 }
 
 interface UserAvatarProps {
@@ -80,11 +81,12 @@ export const letterToColor: { [key: string]: string } = {
   z: "#FFC300",
 };
 
-export const ServerButton = ({ name, picture }: ServerButtonProps) => {
+export const ServerButton = ({ name, picture, refreshflag }: ServerButtonProps) => {
   var avatar = null;
+  const cacheBuster = refreshflag;
   console.log ("picture:", picture);
   if (picture !== undefined) {
-    avatar = BASE_URL+AVATAR_URL+picture;
+    avatar = BASE_URL+AVATAR_URL+`${picture}?cb=${cacheBuster}`;
   }
   
   return(
@@ -110,10 +112,11 @@ export const ServerButton = ({ name, picture }: ServerButtonProps) => {
 );
 };
 
-export const ServerIcon = ({ name, picture }: ServerButtonProps) => {
+export const ServerIcon = ({ name, picture, refreshflag }: ServerButtonProps) => {
   var avatar = null;
+  const cacheBuster = refreshflag;
   if (picture !== undefined) {
-    avatar = BASE_URL+AVATAR_URL+picture;
+    avatar = BASE_URL+AVATAR_URL+`${picture}?cb=${cacheBuster}`;
   }
 
   console.log("picture:",avatar, picture);

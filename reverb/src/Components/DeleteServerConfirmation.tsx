@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { deleteServer } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface DeleteServerConfirmationProps {
   serverId: number;
@@ -19,7 +20,7 @@ const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
 }) => {
   const { auth } = useAuth();
   const [error, setError] = useState<string>("");
-
+  const stomp = useStompContext();
   const handleDelete = async () => {
     setError("");
     try {
@@ -27,6 +28,7 @@ const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
       alert(`Server "${serverName}" deleted successfully!`);
       onClose();
       onDeleted && onDeleted();
+      stomp.deleteServerSignal(serverId);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to delete server.");
     }

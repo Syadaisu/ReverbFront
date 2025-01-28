@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { editChannel } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface EditChannelModalProps {
   channelId: number;
@@ -23,6 +24,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = ({
   const [channelName, setChannelName] = useState<string>(currentName);
   const [description, setDescription] = useState<string>(currentDesc || "");
   const [error, setError] = useState<string>("");
+  const stomp = useStompContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +39,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = ({
       await editChannel(auth.accessToken, channelId, channelName.trim(), description.trim());
       alert("Channel updated successfully!");
       onClose();
+      stomp.editChannelSignal(channelId);
       onSuccess && onSuccess();
+
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to edit channel.");
     }

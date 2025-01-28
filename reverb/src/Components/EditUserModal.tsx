@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { editUserData } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface EditUserModalProps {
   onClose: () => void;
 }
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
-  const { auth } = useAuth();
+  const { auth,setAuth } = useAuth();
   // The user can choose a new username, or keep existing
   const [userName, setUserName] = useState<string>(auth?.username || "");
   const [oldPassword, setOldPassword] = useState<string>("");
@@ -17,6 +18,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const stomp = useStompContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +41,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
         newPassword.trim() || undefined
       );
       alert("User data updated successfully.");
-      auth.username = userName;
+      console.log ("auth.username: " + auth.username + " userName: " + userName);
+      setAuth((prev) => ({
+        ...prev,
+        username: userName.trim()
+      }));
       // Optionally update local state or context if needed
       // e.g. setAuth({ ...auth, username: userName });
+      stomp.editUserSignal(auth.userId);
       onClose();
     } catch (err: any) {
       setError(err.message || "Error updating user data");

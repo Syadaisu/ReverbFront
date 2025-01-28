@@ -7,6 +7,7 @@ import SearchBar from "./SearchBar";
 import { MdSend } from "react-icons/md";
 import { url } from "inspector";
 import ChatInputRow from "./ChatInputRow";
+import { get } from "http";
 
 interface ChannelInfo {
   channelId: number;
@@ -25,12 +26,10 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | null>(null);
   const [messages, setMessages] = useState<MessageProps[]>([]);
-  const [inputValue, setInputValue] = useState("");
   const [userList, setUserList] = useState<any[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<MessageProps[]>([]);
   const [searchValue , setSearchValue] = useState("");
-  const [isAttachingFile, setIsAttachingFile] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [refreshIconFlag, setRefreshIconFlag] = useState(0);
 
 
   const handleFilterMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,9 +127,63 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
 }, [messages, auth, userList]);
 
 
+  useEffect(() => {
+      if (!stomp || !stomp.connected) return;
+      
+      // For minimal "server edited" signal
+      
+      const subEditUser = stomp.onUserEditedSignal((data) => {
+        console.log("Received user.edited signal:", data);
+        getUser(auth.accessToken, data.userId)
+          .then((resp) => {
+            console.log ("resp.data: " + JSON.stringify(resp.data));
+            const updatedUser = resp.data;
+            setUserList((prev) => {
+              const existingIndex = prev.findIndex((u) => u.userId === updatedUser.userId);
+              if (existingIndex >= 0) {
+                const newList = [...prev];
+                newList[existingIndex] = updatedUser;
+                return newList;
+              } else {
+                return [...prev, updatedUser];
+              }
+            });
+          })
+          .catch(console.error);
+          handleIconUpdate();
+      });
+
+      return () => {
+        
+        subEditUser?.unsubscribe();
+      };
+    }, [stomp]);
 
 
+    const handleIconUpdate = () => {
+      setRefreshIconFlag((prev) => prev + 1);
+    };
 
+
+    useEffect(() => {
+      getUser(auth.accessToken, auth.userId)
+      .then((resp) => {
+        const updatedUser = resp.data;
+        setUserList((prev) => {
+          const existingIndex = prev.findIndex((u) => u.userId === updatedUser.userId);
+          if (existingIndex >= 0) {
+            const newList = [...prev];
+            newList[existingIndex] = updatedUser;
+            return newList;
+          } else {
+            return [...prev, updatedUser];
+          }
+        });
+      })
+      .catch(console.error);
+      handleIconUpdate();
+      }, [auth]);
+  
   // Subscribe to new messages in real-time
   useEffect(() => {
     if (!stomp || !stomp.connected || !channelId) return;
@@ -145,6 +198,8 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       sub?.unsubscribe();
     };
   }, [stomp, serverId, channelId]);
+
+
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -221,7 +276,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
           return (
             <div key={msg.id} className="bg-gray-700 p-2 rounded flex items-start">
               {user ? (
-                <UserIcon name = {user.userName} picture = {BASE_URL+AVATAR_URL+user.avatarUuid} />
+                <UserIcon name = {user.userName} picture = {BASE_URL+AVATAR_URL+user.avatarUuid} refreshflag={refreshIconFlag} />
               ) : (
                 <UserIcon name = "Unknown User" />
               )} 

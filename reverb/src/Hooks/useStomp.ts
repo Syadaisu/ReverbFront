@@ -150,6 +150,26 @@ export const useStomp = () => {
     publish("/app/deleteChannel", { serverId, channelId });
   };
 
+  const deleteChannelSignal = (channelId: number) => {
+    publish("/app/deleteChannelSignal", {channelId });
+  }
+
+  const deleteServerSignal = (serverId: number) => {
+    publish("/app/deleteServerSignal", {serverId });
+  }
+
+  const editServerSignal = (serverId: number) => {
+    publish("/app/editServerSignal", { serverId});
+  };
+
+  const editChannelSignal = (channelId: number) => {
+    publish("/app/editChannelSignal", {channelId });
+  }
+
+  const editUserSignal = (userId: number) => {
+    publish("/app/editUserSignal", {userId });
+  }
+
   const sendMessage = (channelId: number, authorId: number, body: string, attachmentUuid: string) => {
     console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid);
     publish("/app/addMessage", {
@@ -213,6 +233,48 @@ export const useStomp = () => {
     });
   };
 
+
+  const onServerEditedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/server.edited";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body); 
+    });
+  };
+
+  const onChannelEditedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/channel.edited";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body);
+    });
+  };
+  
+  const onChannelDeletedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/channel.deleted";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body);
+    });
+  };
+
+  const onServerDeletedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/server.deleted";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body);
+    });
+  };
+
+  const onUserEditedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/user.edited";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body);
+    });
+  };
+
+
   return {
     connected,
     joinServer,
@@ -228,5 +290,15 @@ export const useStomp = () => {
     onChannelDeleted,
     onMessageSent,
     getChannels,
+    onServerEditedSignal,
+    onChannelDeletedSignal,
+    deleteChannelSignal,
+    editServerSignal,
+    deleteServerSignal,
+    editChannelSignal,
+    onServerDeletedSignal,
+    onChannelEditedSignal,
+    onUserEditedSignal,
+    editUserSignal,
   };
 };

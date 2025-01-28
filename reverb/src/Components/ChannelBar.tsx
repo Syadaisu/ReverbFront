@@ -6,6 +6,7 @@ import { getChannels, getServer, getAdminsByIds } from "../Api/axios";
 import EditChannelModal from "./EditChannelModal";
 import DeleteChannelConfirmation from "./DeleteChannelConfirmation";
 import { FaPlus, FaEllipsisVertical } from "react-icons/fa6";
+import { get } from "http";
 
 // Example type: adapt to your actual server-info shape
 interface ServerInfo {
@@ -52,6 +53,8 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const [refreshIconFlag, setRefreshIconFlag] = useState(0);
+
   // ---------------------------
   // Fetch server info
   // ---------------------------
@@ -71,6 +74,65 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       })
       .catch(console.error);
   }, [serverId, auth]);
+
+
+  useEffect(() => {
+    if (!stomp || !stomp.connected) return;
+    
+    // For minimal "server edited" signal
+    const subEditServer = stomp.onServerEditedSignal((data) => {
+      console.log("Received server.edited signal:", data);
+      getServer(auth.accessToken, serverId)
+      .then((resp) => {
+        if (resp.data) {
+          setServerInfo({
+            serverId,
+            serverName: resp.data.serverName,
+            serverDescription: resp.data.description,
+            serverIconUuid: resp.data.serverIconUuid,
+            ownerId: resp.data.ownerId,
+          });
+          setRefreshIconFlag((prev) => prev + 1);
+        }
+      })
+    });
+    
+    const subDeleteServer = stomp.onServerDeletedSignal((data) => {
+      console.log("Received server.deleted signal:", data);
+      // Route to home or show a message
+      getServer(auth.accessToken, serverId)
+      .then((resp) => {
+        if (resp.data) {
+          setServerInfo({
+            serverId,
+            serverName: resp.data.serverName,
+            serverDescription: resp.data.description,
+            serverIconUuid: resp.data.serverIconUuid,
+            ownerId: resp.data.ownerId,
+          });
+        }
+      })
+
+    });
+
+    
+    // For minimal "channel deleted" signal
+    const subDeleteChannel = stomp.onChannelDeletedSignal((data) => {
+      console.log("Received channel.deleted signal:", data);
+      refetchChannels();
+    });
+    
+    const subEditChannel = stomp.onChannelEditedSignal((data) => {
+      console.log("Received channel.edited signal:", data);
+      refetchChannels();
+    });
+    return () => {
+      subDeleteServer?.unsubscribe();
+      subEditServer?.unsubscribe();
+      subDeleteChannel?.unsubscribe();
+      subEditChannel?.unsubscribe();
+    };
+  }, [stomp]);
 
   // ---------------------------
   // Fetch server admins (authorized users)
@@ -192,7 +254,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       {serverInfo && (
         <div className="flex flex-col mb-4">
           <div className="flex items-center space-x-2">
-            <ServerIcon name={serverInfo.serverName} picture={serverInfo.serverIconUuid} />
+            <ServerIcon name={serverInfo.serverName} picture={serverInfo.serverIconUuid} refreshflag={refreshIconFlag} />
             <h2 className="text-lg font-bold">{serverInfo.serverName}</h2>
           </div>
           {serverInfo.serverDescription && (

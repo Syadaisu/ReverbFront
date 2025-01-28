@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ServerButton, IconButton } from "./IconLib";
-import { getUserServers, joinServer, getAdminsByIds } from "../Api/axios"; 
+import { getUserServers, joinServer, getAdminsByIds, editServer } from "../Api/axios"; 
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
 
@@ -45,6 +45,8 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
 
   const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
   const [openServerDropdown, setOpenServerDropdown] = useState<string | null>(null);
+
+  const [refreshIconFlag, setRefreshIconFlag] = useState(0);
 
   // ---------------------------
   // 1) Fetch user servers
@@ -108,8 +110,20 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
       };
       setServers((prev) => [...prev, newServer]);
     });
-    return () => sub?.unsubscribe();
+
+    const editSub = stomp.onServerEditedSignal((data) => {
+      console.log("Server edited signal received:", data);
+      refetchServers();
+     
+      setRefreshIconFlag((prev) => prev + 1);
+    });
+    return () => {
+      sub?.unsubscribe();
+      editSub?.unsubscribe();
+    }
+
   }, [stomp]);
+
 
   // Helper to re-fetch servers & authorized users
   const refetchServers = () => {
@@ -125,6 +139,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
             ownerId: srv.ownerId,
           }));
           setServers(transformed);
+          setRefreshIconFlag((prev) => prev + 1);
         }
       })
       .catch(console.error);
@@ -142,6 +157,8 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
     setShowCreateServer(false);
     refetchServers();
   };
+
+
 
   // JOIN server
   const handleJoinServer = () => {
@@ -213,7 +230,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
                 toggleServerDropdown(srv.id.toString());
               }}
             >
-              <ServerButton name={srv.name} picture={srv.serverIconUuid} />
+              <ServerButton name={srv.name} picture={srv.serverIconUuid} refreshflag={refreshIconFlag}  />
             </button>
 
             {/* Dropdown for various actions */}

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { editServer } from "../Api/axios";
 import useAuth from "../Hooks/useAuth";
+import { useStompContext } from "../Hooks/useStompContext";
 
 interface EditServerModalProps {
   serverId: number;
@@ -23,6 +24,7 @@ const EditServerModal: React.FC<EditServerModalProps> = ({
   const [serverName, setServerName] = useState<string>(currentName);
   const [description, setDescription] = useState<string>(currentDesc || "");
   const [error, setError] = useState<string>("");
+  const stomp = useStompContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +39,7 @@ const EditServerModal: React.FC<EditServerModalProps> = ({
       await editServer(auth.accessToken, serverId, serverName.trim(), description.trim());
       alert("Server updated successfully!");
       onClose();
+      stomp.editServerSignal(serverId);
       onSuccess && onSuccess();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to edit server.");

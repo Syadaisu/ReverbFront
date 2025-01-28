@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ServerBar from "./ServerBar";
 import ChannelBar from "./ChannelBar";
 import ChatView from "./ChatView";
 import { UserAvatar } from "./IconLib";
 import useAuth from "../Hooks/useAuth";
-import { BASE_URL, AVATAR_URL } from "../Api/axios";
+import { BASE_URL, AVATAR_URL, getUser } from "../Api/axios";
+import { useStompContext } from "../Hooks/useStompContext";
 
 import EditUserModal from "./EditUserModal";
 import UpdateAvatarModal from "./UpdateAvatarModal";
@@ -16,10 +17,9 @@ const Home = () => {
   const [showEditUser, setShowEditUser] = useState(false);
   const [showUpdateAvatar, setShowUpdateAvatar] = useState(false);
   const [refreshFlag, setRefreshFlag] = useState(0);
-
+  const stomp = useStompContext();
   // Toggle for user avatar dropdown
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
 
   const handleLogout = () => {
     
@@ -33,6 +33,10 @@ const Home = () => {
   const handleAvatarUpdate = () => {
     setRefreshFlag((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    handleAvatarUpdate();
+  }, [auth]);
 
   // Track which server/channel is selected
   const [selectedServerId, setSelectedServerId] = useState<number | null>(null);
