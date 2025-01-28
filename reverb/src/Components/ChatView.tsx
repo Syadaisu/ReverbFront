@@ -13,7 +13,8 @@ import { UserIcon } from "./IconLib";
 import SearchBar from "./SearchBar";
 import ChatInputRow from "./ChatInputRow";
 import DeleteMessageConfirmation from "./DeleteMessageConfirmation";
-import { MdSend } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
+import {FaReply, FaTrash} from "react-icons/fa";
 
 interface ChannelInfo {
   channelId: number;
@@ -49,6 +50,10 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<MessageProps | null>(null);
 
+ 
+  const [replyParent, setReplyParent] = useState<null | { id: string; body: string }>(null);
+
+
   // ---------------------------
   // 1) Fetch channel info & messages on mount or channel change
   // ---------------------------
@@ -73,6 +78,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       .then((resp) => {
         if (Array.isArray(resp.data)) {
           setMessages(resp.data);
+          console.log("Fetched channel messages:", resp.data);
         }
       })
       .catch((err) => console.error("Failed to fetch channel messages:", err));
@@ -212,6 +218,10 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     setFilteredMessages([]);
   }
 
+  function handleReplyClick(msg: MessageProps) {
+    setReplyParent({ id: msg.messageId, body: msg.body });
+  }
+
   // ---------------------------
   // 6) Deleting a message
   // ---------------------------
@@ -230,15 +240,15 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   // ---------------------------
   // 7) Sending text or file
   // ---------------------------
-  const handleSendText = (text: string) => {
-    stomp.sendMessage(channelId, auth.userId, text, "");
+  const handleSendText = (text: string, replyId? : string) => {
+    stomp.sendMessage(channelId, auth.userId, text, "", replyParent?.id || "");
   };
 
-  const handleSendFile = async (file: File) => {
+  const handleSendFile = async (file: File,replyId? : string) => {
     try {
       const resp = await uploadFile(auth.accessToken, file);
       const attachmentUuid = resp.data;
-      stomp.sendMessage(channelId, auth.userId, "", attachmentUuid);
+      stomp.sendMessage(channelId, auth.userId, "", attachmentUuid, replyParent?.id || "");
     } catch (error) {
       console.error("File upload error:", error);
     }
@@ -274,7 +284,11 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
             const isAuthor = (auth.userId === Number(msg.authorId));
 
             return (
-              <div key={msg.messageId} className="relative bg-gray-700 p-2 rounded flex items-start mb-2">
+              <div key={msg.messageId} className="mb-4">
+                {msg.responseToId  && (
+                <ParentSnippet replyToId={msg.responseToId} messages={messages} />
+                )}
+                <div className="relative bg-gray-700 p-2 rounded flex items-start ">
                 {/* Avatar */}
                 {user ? (
                   <UserIcon
@@ -285,9 +299,11 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
                 ) : (
                   <UserIcon name="Unknown User" />
                 )}
+
                 {/* Message text or image */}
                 <div className="ml-2">
                   <div className="flex items-center">
+                    
                     <span className="font-bold text-white mr-2">
                       {user ? user.userName : "Unknown User"}
                     </span>
@@ -297,17 +313,26 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
                   </div>
                   <div className="text-gray-200">{renderMessageContent(msg)}</div>
                 </div>
-
+                <div className="absolute top-2 right-2 flex items-center space-x-3">
                 {/* Show "Delete" button if author */}
                 {isAuthor && (
                   <button
-                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                    className="text-gray-400 hover:text-red-500"
                     title="Delete message"
                     onClick={() => openDeleteModal(msg)}
                   >
-                    ✕
+                    <FaTrash size={15} />
                   </button>
                 )}
+                {/* Reply button */}
+                <button
+                className="ml-auto text-xs text-gray-400 hover:text-yellow-500"
+                onClick={() => handleReplyClick(msg)}
+              >
+                <FaReply size={15}/>
+              </button>
+              </div>
+              </div>
               </div>
             );
           })
@@ -320,7 +345,18 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       </div>
 
       {/* Chat input row */}
-      <ChatInputRow onSendText={handleSendText} onSendFile={handleSendFile} />
+      <ChatInputRow
+      onSendText={(text, replyId) => {
+        handleSendText(text, replyId);
+        // your code to send text message with optional replyId
+      }}
+      onSendFile={(file, replyId) => {
+        handleSendFile(file, replyId);
+        // your code to send file with optional replyId
+      }}
+      replyParent={replyParent}
+      clearReply={() => setReplyParent(null)}
+    />
 
       {/* Delete Message Confirmation Modal */}
       {showDeleteModal && messageToDelete && (
@@ -352,5 +388,36 @@ function renderMessageContent(msg: MessageProps) {
   }
   return <span className="italic text-gray-400">Empty message</span>;
 }
+
+function ParentSnippet({
+  replyToId,
+  messages,
+}: {
+  replyToId: string;
+  messages: MessageProps[];
+}) {
+  const parent = messages.find((m) => m.messageId === replyToId);
+  if (!parent) {
+    return (
+      <div className="mb-1 p-1 bg-gray-600 text-xs text-gray-300 italic rounded">
+        [Replied message not found]
+      </div>
+    );
+  }
+
+  // Evaluate parent's content
+  const isAttachmentOnly =
+    (!parent.body || !parent.body.trim()) && parent.attachmentUuid;
+
+  return (
+    <div className="mb-1 p-1 bg-gray-600 text-xs text-gray-300 rounded">
+      <span className="font-bold">Replying to:</span>{" "}
+      {isAttachmentOnly
+        ? "an attachment."
+        : parent.body.slice(0, 60) + (parent.body.length > 60 ? "…" : "")}
+    </div>
+  );
+}
+
 
 export default ChatView;

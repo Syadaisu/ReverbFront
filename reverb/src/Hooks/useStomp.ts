@@ -39,6 +39,7 @@ export interface MessageProps {
   body: string;
   creationDate: string;
   attachmentUuid?: string;
+  responseToId?: string;
 }
 
 export interface ServerProps {
@@ -174,14 +175,14 @@ export const useStomp = () => {
     publish("/app/editUserSignal", {userId });
   }
 
-  const sendMessage = (channelId: number, authorId: number, body: string, attachmentUuid: string) => {
-    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid);
+  const sendMessage = (channelId: number, authorId: number, body: string, attachmentUuid: string, replyToId: string) => {
+    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid, "replyToId:", replyToId);
     publish("/app/addMessage", {
       channelId,
       authorId,
       body,
-      responseToId: "",
-      responseTo: "",
+      responseToId: replyToId || "",
+      responseTo:"",
       attachmentUuid: attachmentUuid,
     });
   };
