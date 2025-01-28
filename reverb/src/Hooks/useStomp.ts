@@ -33,7 +33,7 @@ export interface ChannelProps {
 }
 
 export interface MessageProps {
-  id: string;
+  messageId: string;
   channelId: string;
   authorId: string;
   body: string;
@@ -158,6 +158,10 @@ export const useStomp = () => {
     publish("/app/deleteServerSignal", {serverId });
   }
 
+  const deleteMessageSignal = (messageId: string) => {
+    publish("/app/deleteMessageSignal", {messageId });
+  }
+
   const editServerSignal = (serverId: number) => {
     publish("/app/editServerSignal", { serverId});
   };
@@ -274,6 +278,14 @@ export const useStomp = () => {
     });
   };
 
+  const onMessageDeletedSignal = (callback: (payload: any) => void) => {
+    const destination = "/topic/message.deleted";
+    return subscribe(destination, (msg) => {
+      const body = JSON.parse(msg.body);
+      callback(body);
+    });
+  }
+
 
   return {
     connected,
@@ -300,5 +312,7 @@ export const useStomp = () => {
     onChannelEditedSignal,
     onUserEditedSignal,
     editUserSignal,
+    onMessageDeletedSignal,
+    deleteMessageSignal,
   };
 };

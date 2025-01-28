@@ -23,6 +23,7 @@ const EDIT_SERVER = '/server/edit/'
 const DELETE_SERVER = '/server/delete/'
 const EDIT_CHANNEL = '/channel/edit/'
 const DELETE_CHANNEL = '/channel/delete/'
+const DELETE_MESSAGE = '/message/delete/'
 
 const GET_ADMINSBYIDS = '/server/getServerAdminIds/'
 const GRANTADMINBYEMAIL = '/server/grantAdminByEmail/'
@@ -284,6 +285,19 @@ export const editChannel = async (token: string, channelId: number, channelName?
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const deleteMessage = async (token: string, messageId: string) => {
+    const response = await axios.delete(
+        BASE_URL + DELETE_MESSAGE + messageId,
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
             },
         },
     );

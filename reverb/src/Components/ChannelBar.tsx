@@ -124,7 +124,19 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
     
     const subEditChannel = stomp.onChannelEditedSignal((data) => {
       console.log("Received channel.edited signal:", data);
-      refetchChannels();
+      getChannels(auth.accessToken, serverId.toString())
+      .then((resp) => {
+        if (Array.isArray(resp.data)) {
+          const transformed = resp.data.map((chnl: any) => ({
+            id: chnl.channelId.toString(),
+            name: chnl.channelName,
+            description: chnl.description,
+            serverId: chnl.serverId,
+          }));
+          setChannels(transformed);
+        }
+      })
+      .catch(console.error);
     });
     return () => {
       subDeleteServer?.unsubscribe();
