@@ -1,9 +1,9 @@
 // src/Components/UpdateAvatarModal.tsx
 
 import React, { useState } from "react";
-import { uploadAvatar, getUser } from "../Api/axios";
-import useAuth from "../Hooks/useAuth";
-import { useStompContext } from "../Hooks/useStompContext";
+import { uploadAvatar, getUser } from "../../Api/axios";
+import useAuth from "../../Hooks/useAuth";
+import { useStompContext } from "../../Hooks/useStompContext";
 
 interface UpdateAvatarModalProps {
   onClose: () => void;
@@ -74,13 +74,13 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({ onClose, onUpload
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded mr-2"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
             <button
               type="button"
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
               onClick={onClose}
               disabled={loading}
             >

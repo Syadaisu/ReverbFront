@@ -12,7 +12,7 @@ import {
 import { UserIcon } from "./IconLib";
 import SearchBar from "./SearchBar";
 import ChatInputRow from "./ChatInputRow";
-import DeleteMessageConfirmation from "./DeleteMessageConfirmation";
+import DeleteMessageConfirmation from "./Modals/DeleteMessageConfirmation";
 import { MdCancel } from "react-icons/md";
 import {FaReply, FaTrash} from "react-icons/fa";
 

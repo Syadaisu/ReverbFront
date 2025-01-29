@@ -1,27 +1,27 @@
-// src/Components/Modals/EditChannelModal.tsx
+// src/Components/Modals/EditServerModal.tsx
 
 import React, { useState } from "react";
-import { editChannel } from "../Api/axios";
-import useAuth from "../Hooks/useAuth";
-import { useStompContext } from "../Hooks/useStompContext";
+import { editServer } from "../../Api/axios";
+import useAuth from "../../Hooks/useAuth";
+import { useStompContext } from "../../Hooks/useStompContext";
 
-interface EditChannelModalProps {
-  channelId: number;
+interface EditServerModalProps {
+  serverId: number;
   currentName: string;
   currentDesc?: string;
   onClose: () => void;
-  onSuccess?: () => void; // callback to refresh channel list
+  onSuccess?: () => void; // optional callback to refresh server list
 }
 
-const EditChannelModal: React.FC<EditChannelModalProps> = ({
-  channelId,
+const EditServerModal: React.FC<EditServerModalProps> = ({
+  serverId,
   currentName,
   currentDesc,
   onClose,
   onSuccess
 }) => {
   const { auth } = useAuth();
-  const [channelName, setChannelName] = useState<string>(currentName);
+  const [serverName, setServerName] = useState<string>(currentName);
   const [description, setDescription] = useState<string>(currentDesc || "");
   const [error, setError] = useState<string>("");
   const stomp = useStompContext();
@@ -30,35 +30,34 @@ const EditChannelModal: React.FC<EditChannelModalProps> = ({
     e.preventDefault();
     setError("");
 
-    if (!channelName.trim()) {
-      setError("Channel name cannot be empty.");
+    if (!serverName.trim()) {
+      setError("Server name cannot be empty.");
       return;
     }
 
     try {
-      await editChannel(auth.accessToken, channelId, channelName.trim(), description.trim());
-      alert("Channel updated successfully!");
+      await editServer(auth.accessToken, serverId, serverName.trim(), description.trim());
+      alert("Server updated successfully!");
       onClose();
-      stomp.editChannelSignal(channelId);
+      stomp.editServerSignal(serverId);
       onSuccess && onSuccess();
-
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to edit channel.");
+      setError(err.response?.data?.message || "Failed to edit server.");
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-gray-700 p-4 rounded w-96">
-        <h2 className="text-xl font-bold mb-4">Edit Channel</h2>
+        <h2 className="text-xl font-bold mb-4">Edit Server</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-2">
-            <label className="block font-semibold mb-1">Channel Name</label>
+            <label className="block font-semibold mb-1">Server Name</label>
             <input
               type="text"
               className="w-full p-2 text-black rounded"
-              value={channelName}
-              onChange={(e) => setChannelName(e.target.value)}
+              value={serverName}
+              onChange={(e) => setServerName(e.target.value)}
               required
             />
           </div>
@@ -74,13 +73,13 @@ const EditChannelModal: React.FC<EditChannelModalProps> = ({
           <div className="flex justify-end mt-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded mr-2"
             >
               Save
             </button>
             <button
               type="button"
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
               onClick={onClose}
             >
               Cancel
@@ -92,4 +91,4 @@ const EditChannelModal: React.FC<EditChannelModalProps> = ({
   );
 };
 
-export default EditChannelModal;
+export default EditServerModal;

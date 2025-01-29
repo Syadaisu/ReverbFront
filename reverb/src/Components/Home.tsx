@@ -7,8 +7,8 @@ import useAuth from "../Hooks/useAuth";
 import { BASE_URL, AVATAR_URL, getUser } from "../Api/axios";
 import { useStompContext } from "../Hooks/useStompContext";
 
-import EditUserModal from "./EditUserModal";
-import UpdateAvatarModal from "./UpdateAvatarModal";
+import EditUserModal from "./Modals/EditUserModal";
+import UpdateAvatarModal from "./Modals/UpdateAvatarModal";
 
 const Home = () => {
   const { auth,logout } = useAuth();

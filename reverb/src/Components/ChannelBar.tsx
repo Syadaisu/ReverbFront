@@ -1,12 +1,14 @@
+// src/Components/ChannelBar.tsx
+
 import React, { useEffect, useState } from "react";
 import { ChannelButton, ServerIcon } from "./IconLib";
 import { useStompContext } from "../Hooks/useStompContext";
 import useAuth from "../Hooks/useAuth";
 import { getChannels, getServer, getAdminsByIds } from "../Api/axios";
-import EditChannelModal from "./EditChannelModal";
-import DeleteChannelConfirmation from "./DeleteChannelConfirmation";
+import EditChannelModal from "./Modals/EditChannelModal";
+import DeleteChannelConfirmation from "./Modals/DeleteChannelConfirmation";
+import CreateChannelModal from "./Modals/CreateChannelModal"; // New import
 import { FaPlus, FaEllipsisVertical } from "react-icons/fa6";
-import { get } from "http";
 
 // Example type: adapt to your actual server-info shape
 interface ServerInfo {
@@ -44,8 +46,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   
   // Modal states
   const [showCreateChannel, setShowCreateChannel] = useState(false);
-  const [chName, setChName] = useState("");
-  const [chDesc, setChDesc] = useState("");
+  // Removed chName and chDesc since they're now managed inside CreateChannelModal
 
   // Channel dropdown logic
   const [openChannelMenu, setOpenChannelMenu] = useState<string | null>(null);
@@ -74,7 +75,6 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       })
       .catch(console.error);
   }, [serverId, auth]);
-
 
   useEffect(() => {
     if (!stomp || !stomp.connected) return;
@@ -144,7 +144,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
       subDeleteChannel?.unsubscribe();
       subEditChannel?.unsubscribe();
     };
-  }, [stomp]);
+  }, [stomp, serverId, auth]);
 
   // ---------------------------
   // Fetch server admins (authorized users)
@@ -231,15 +231,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
   // ---------------------------
   // Creating a channel
   // ---------------------------
-  const handleCreateChannel = () => {
-    if (!chName.trim()) return;
-    // Using STOMP
-    stomp.createChannel(serverId.toString(), chName, chDesc);
-    setChName("");
-    setChDesc("");
-    setShowCreateChannel(false);
-    refetchChannels();
-  };
+  // Removed handleCreateChannel since it's now handled by CreateChannelModal
 
   // Show/hide channel dropdown
   const toggleChannelMenu = (channelId: string) => {
@@ -289,7 +281,7 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
           </button>
         )}
       </div>
-
+      <div className="flex-1 overflow-y-auto mb-4 scrollbar-gutter-stable pr-2">
       {/* CHANNEL LIST */}
       <div className="space-y-2">
         {channels.map((ch) => {
@@ -336,37 +328,14 @@ const ChannelBar: React.FC<ChannelBarProps> = ({ serverId, onChannelSelect }) =>
           );
         })}
       </div>
-
+      </div>
       {/* CREATE CHANNEL MODAL */}
       {showCreateChannel && (
-        <div className="absolute bg-gray-700 p-3 shadow rounded">
-          <input
-            className="p-1 text-black w-full"
-            placeholder="Channel Name"
-            value={chName}
-            onChange={(e) => setChName(e.target.value)}
-          />
-          <textarea
-            className="p-1 text-black mt-2 w-full"
-            placeholder="Description"
-            value={chDesc}
-            onChange={(e) => setChDesc(e.target.value)}
-          />
-          <div>
-            <button
-              className="bg-blue-500 p-1 mt-2"
-              onClick={handleCreateChannel}
-            >
-              Create
-            </button>
-            <button
-              className="bg-gray-500 p-1 mt-2 ml-2"
-              onClick={() => setShowCreateChannel(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <CreateChannelModal
+          serverId={serverId}
+          onClose={() => setShowCreateChannel(false)}
+          onSuccess={refetchChannels}
+        />
       )}
 
       {/* EDIT CHANNEL MODAL */}

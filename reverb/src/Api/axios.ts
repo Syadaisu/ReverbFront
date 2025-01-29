@@ -28,6 +28,8 @@ const DELETE_MESSAGE = '/message/delete/'
 const GET_ADMINSBYIDS = '/server/getServerAdminIds/'
 const GRANTADMINBYEMAIL = '/server/grantAdminByEmail/'
 
+const ADD_SERVER = '/server/add'
+
 
 export const registerUser = async (userName: string, email: string, password: string, repeatPassword: string) => {
     const response = await axios.post(
@@ -354,3 +356,21 @@ export const grantAdminByEmail = async (
     return response;
   };
   
+
+  export const createServer = async (token: string, serverName: string, serverDescription: string, userId: number) => {
+    const response = await axios.post(
+        BASE_URL + ADD_SERVER,
+        JSON.stringify({
+            serverName: serverName,
+            serverDescription: serverDescription,
+            ownerId: userId,
+        }),
+        {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};

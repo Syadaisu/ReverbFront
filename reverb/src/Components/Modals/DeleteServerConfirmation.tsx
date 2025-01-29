@@ -1,9 +1,9 @@
 // src/Components/Modals/DeleteServerConfirmation.tsx
 
 import React, { useState } from "react";
-import { deleteServer } from "../Api/axios";
-import useAuth from "../Hooks/useAuth";
-import { useStompContext } from "../Hooks/useStompContext";
+import { deleteServer } from "../../Api/axios";
+import useAuth from "../../Hooks/useAuth";
+import { useStompContext } from "../../Hooks/useStompContext";
 
 interface DeleteServerConfirmationProps {
   serverId: number;
@@ -42,13 +42,13 @@ const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
         {error && <p className="text-red-500 mt-2">{error}</p>}
         <div className="flex justify-end mt-4">
           <button
-            className="bg-red-600 text-white px-4 py-2 rounded mr-2"
+            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded mr-2"
             onClick={handleDelete}
           >
             Delete
           </button>
           <button
-            className="bg-gray-500 text-white px-4 py-2 rounded"
+            className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
             onClick={onClose}
           >
             Cancel

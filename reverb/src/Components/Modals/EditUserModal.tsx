@@ -1,9 +1,9 @@
 // src/Components/EditUserModal.tsx
 
 import React, { useState } from "react";
-import { editUserData } from "../Api/axios";
-import useAuth from "../Hooks/useAuth";
-import { useStompContext } from "../Hooks/useStompContext";
+import { editUserData } from "../../Api/axios";
+import useAuth from "../../Hooks/useAuth";
+import { useStompContext } from "../../Hooks/useStompContext";
 
 interface EditUserModalProps {
   onClose: () => void;
@@ -103,13 +103,13 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded mr-2"
             >
               {loading ? "Updating..." : "Update"}
             </button>
             <button
               type="button"
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
               onClick={onClose}
               disabled={loading}
             >

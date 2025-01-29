@@ -6,22 +6,10 @@ body {
   background-color: #2a3a54  ;
 }
 
-.channel-large {
+.server-list {
   flex: 1;
-}
-
-.channel-small {
-  flex: 0.7;
-}
-
-.server-members {
-  flex: 0.3;
-}
-
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
-.IoMdArrowDropdown {
-  transition: transform 0.3s ease-in-out;
+  width: 100%;
+  overflow-y: scroll;
+  padding-right: 0.5rem; /* Equivalent to pr-2 */
+  margin-bottom: 1rem; /* Equivalent to mb-4 */
 }

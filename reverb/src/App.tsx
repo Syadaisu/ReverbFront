@@ -1,9 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/RegisterPage";
-import MainPage from "./Pages/MainPage";
 import Home from "./Components/Home";
-import ServerView from "./Components/ServerView";
 import ProtectedRoute from "./Components/ProtectedRoutes";
 
 

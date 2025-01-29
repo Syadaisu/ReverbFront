@@ -1,9 +1,9 @@
 // src/Components/UpdateAvatarModal.tsx
 
 import React, { useState } from "react";
-import { uploadServerIcon } from "../Api/axios";
-import useAuth from "../Hooks/useAuth";
-import { useStompContext } from "../Hooks/useStompContext";
+import { uploadServerIcon } from "../../Api/axios";
+import useAuth from "../../Hooks/useAuth";
+import { useStompContext } from "../../Hooks/useStompContext";
 
 interface UpdateServerIconProps {
   serverId: number;
@@ -68,13 +68,13 @@ const UpdateServerIcon: React.FC<UpdateServerIconProps> = ({ onClose, onUploadSu
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded mr-2"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
             <button
               type="button"
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
               onClick={onClose}
               disabled={loading}
             >
