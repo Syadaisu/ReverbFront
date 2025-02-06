@@ -14,14 +14,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchValue, onSearch, onClear })
   const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Automatically focus the input when expanded
   useEffect(() => {
     if (isExpanded) {
       inputRef.current?.focus();
     }
   }, [isExpanded]);
 
-  // Collapse the search bar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -43,13 +41,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchValue, onSearch, onClear })
 
   return (
     <div className="search-bar-container relative">
-      {/* Wrapper for smooth width transition */}
       <div
         className={`flex items-center rounded-full transition-all duration-500 ease-in-out ${
           isExpanded ? "bg-gray-600 w-64 px-3" : "w-10 px-2"
         }`}
       >
-        {/* Search Icon */}
         <FaSearch
           className={`text-white text-lg cursor-pointer transition-transform duration-500 ${
             isExpanded ? "mr-2" : ""
@@ -57,7 +53,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchValue, onSearch, onClear })
           onClick={() => setIsExpanded(true)}
         />
 
-        {/* Input Field */}
         {isExpanded && (
           <>
             <input

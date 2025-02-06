@@ -7,7 +7,7 @@ import { useStompContext } from "../../Hooks/useStompContext";
 interface CreateChannelModalProps {
   serverId: number;
   onClose: () => void;
-  onSuccess?: () => void; // Optional callback to refresh channel list
+  onSuccess?: () => void;
 }
 
 const CreateChannelModal: React.FC<CreateChannelModalProps> = ({ serverId, onClose, onSuccess }) => {

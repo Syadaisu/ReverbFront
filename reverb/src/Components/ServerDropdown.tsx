@@ -16,7 +16,8 @@ interface ServerDropdownProps {
   onEdit: (server: ServerData) => void;
   onDelete: (server: ServerData) => void;
   onChangeIcon: (server: ServerData) => void;
-  onGrantAuthorities: (server: ServerData) => void;
+  onAuthorities: (server: ServerData) => void;
+  onLeaveServer: (server: ServerData) => void;
   canEdit: boolean;
   isOwner: boolean;
 }
@@ -28,7 +29,8 @@ const ServerDropdown: React.FC<ServerDropdownProps> = ({
   onEdit,
   onDelete,
   onChangeIcon,
-  onGrantAuthorities,
+  onAuthorities,
+  onLeaveServer,
   canEdit,
   isOwner,
 }) => {
@@ -36,46 +38,41 @@ const ServerDropdown: React.FC<ServerDropdownProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       onClose();
     };
-    // Add event listener to detect clicks outside the dropdown
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
-  // Prevent the dropdown itself from triggering the close
   const handleDropdownMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
   };
 
-  // Fetch the portal container
   const portalRoot = document.getElementById("portal-root");
-  if (!portalRoot) return null; // Safety check
-
+  if (!portalRoot) return null;
   return ReactDOM.createPortal(
     <div
       className="absolute bg-gray-700 rounded shadow z-50 w-48 text-white"
       style={{ top: position.top, left: position.left }}
-      onClick={(e) => e.stopPropagation()} // Prevent click events from bubbling
-      onMouseDown={handleDropdownMouseDown} // Prevent mousedown events from bubbling
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={handleDropdownMouseDown}
     >
-      {/* If Owner => can do Grant & Delete */}
       {isOwner && (
         <>
           <button
             className="block w-full text-left px-4 py-2 hover:bg-gray-600"
             onClick={() => {
-              console.log("Grant Authorities clicked");
-              onGrantAuthorities(server);
+              //console.log("Grant Authorities clicked");
+              onAuthorities(server);
               onClose();
             }}
           >
-            Grant Authorities
+            Authorities Management
           </button>
           <button
             className="block w-full text-left px-4 py-2 hover:bg-red-500"
             onClick={() => {
-              console.log("Delete clicked");
+              //console.log("Delete clicked");
               onDelete(server);
               onClose();
             }}
@@ -85,13 +82,12 @@ const ServerDropdown: React.FC<ServerDropdownProps> = ({
         </>
       )}
 
-      {/* If Owner or Authorized => can do Edit & Icon */}
       {canEdit && (
         <>
           <button
             className="block w-full text-left px-4 py-2 hover:bg-gray-600"
             onClick={() => {
-              console.log("Edit clicked");
+              //console.log("Edit clicked");
               onEdit(server);
               onClose();
             }}
@@ -101,7 +97,7 @@ const ServerDropdown: React.FC<ServerDropdownProps> = ({
           <button
             className="block w-full text-left px-4 py-2 hover:bg-gray-600"
             onClick={() => {
-              console.log("Change Icon clicked");
+              //console.log("Change Icon clicked");
               onChangeIcon(server);
               onClose();
             }}
@@ -109,6 +105,18 @@ const ServerDropdown: React.FC<ServerDropdownProps> = ({
             Change Icon
           </button>
         </>
+      )}
+      {!isOwner && (
+        <button
+          className="block w-full text-left px-4 py-2 hover:bg-red-500"
+          onClick={() => {
+            //console.log("Leave Server clicked");
+            onLeaveServer(server);
+            onClose();
+          }}
+        >
+          Leave Server
+        </button>
       )}
     </div>,
     portalRoot

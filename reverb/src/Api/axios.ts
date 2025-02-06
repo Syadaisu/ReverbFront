@@ -16,6 +16,7 @@ const UPLOAD_FILE = '/attachment/uploadFile'
 const UPLOAD_SERVERICON = '/server/avatar/'
 export const AVATAR_URL = '/attachment/view/'
 const JOIN_SERVER = '/server/join'
+const LEAVE_SERVER = '/server/leave'
 
 const EDIT_USER = '/user/edit/'
 const UPLOAD_AVATAR = '/user/avatar/'
@@ -27,6 +28,7 @@ const DELETE_MESSAGE = '/message/delete/'
 
 const GET_ADMINSBYIDS = '/server/getServerAdminIds/'
 const GRANTADMINBYEMAIL = '/server/grantAdminByEmail/'
+const REVOKEADMIN = '/server/revokeAdmin'
 
 const ADD_SERVER = '/server/add'
 
@@ -145,7 +147,7 @@ export const getChannelMessages = async (token: string, channelId: number) => {
 };
 
 export const getUser = async (token: string, userId: number) => {
-    console.log("Getting user with id: ", userId);
+    //console.log("Getting user with id: ", userId);
     const response = await axios.get(
         BASE_URL+GET_USER+userId,
         {
@@ -155,19 +157,37 @@ export const getUser = async (token: string, userId: number) => {
             }
         },
     );
-    console.log ("Response: ", response);
+    //console.log ("Response: ", response);
     return response;
 }
 
 export const joinServer = async (token: string, serverName: string, userId: number) => {
-    // Create URLSearchParams to format data as application/x-www-form-urlencoded
+
     const params = new URLSearchParams();
     params.append('serverName', serverName);
     params.append('userId', userId.toString());
-    console.log("Joining server with link:", BASE_URL + JOIN_SERVER + params.toString());
+    //console.log("Joining server with link:", BASE_URL + JOIN_SERVER + params.toString());
     const response = await axios.post(
         BASE_URL + JOIN_SERVER,
-        params.toString(), // Convert to string for URL-encoded format
+        params.toString(),
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${token}`,
+            },
+        },
+    );
+    return response;
+};
+
+export const leaveServer = async (token: string, serverName: string, userId: number) => {
+    const params = new URLSearchParams();
+    params.append('serverName', serverName);
+    params.append('userId', userId.toString());
+    //console.log("Leaving server with link:", BASE_URL + JOIN_SERVER + params.toString());
+    const response = await axios.post(
+        BASE_URL + LEAVE_SERVER,
+        params.toString(),
         {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -340,7 +360,7 @@ export const grantAdminByEmail = async (
   ) => {
     const response = await axios.post(
       `${BASE_URL}${GRANTADMINBYEMAIL}${serverId}`,
-      {}, // Empty body since email is in the query parameter
+      {},
       {
         headers: {
           'Content-Type': 'application/json',
@@ -352,7 +372,31 @@ export const grantAdminByEmail = async (
       }
     );
   
-    console.log('Response: ', response);
+    //console.log('Response: ', response);
+    return response;
+  };
+
+export const revokeAdmin = async (
+    token: string,
+    serverName: string,
+    email: string
+  ) => {
+    const response = await axios.post(
+      `${BASE_URL}${REVOKEADMIN}`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          serverName: serverName,
+          email: email,
+        },
+      }
+    );
+  
+    //console.log('Response: ', response);
     return response;
   };
   

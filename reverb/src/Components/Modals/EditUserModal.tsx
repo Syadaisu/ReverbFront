@@ -11,7 +11,6 @@ interface EditUserModalProps {
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
   const { auth,setAuth } = useAuth();
-  // The user can choose a new username, or keep existing
   const [userName, setUserName] = useState<string>(auth?.username || "");
   const [oldPassword, setOldPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -24,7 +23,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
     e.preventDefault();
     setError("");
 
-    // If user typed a new password, confirm must match
     if (newPassword && newPassword !== confirmPassword) {
       setError("New passwords do not match.");
       return;
@@ -32,7 +30,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
 
     setLoading(true);
     try {
-      // Call editUserData
       await editUserData(
         auth?.accessToken || "",
         auth.userId,
@@ -41,13 +38,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ onClose }) => {
         newPassword.trim() || undefined
       );
       alert("User data updated successfully.");
-      console.log ("auth.username: " + auth.username + " userName: " + userName);
+      //console.log ("auth.username: " + auth.username + " userName: " + userName);
       setAuth((prev) => ({
         ...prev,
         username: userName.trim()
       }));
-      // Optionally update local state or context if needed
-      // e.g. setAuth({ ...auth, username: userName });
       stomp.editUserSignal(auth.userId);
       onClose();
     } catch (err: any) {

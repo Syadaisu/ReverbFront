@@ -10,7 +10,7 @@ interface EditChannelModalProps {
   currentName: string;
   currentDesc?: string;
   onClose: () => void;
-  onSuccess?: () => void; // callback to refresh channel list
+  onSuccess?: () => void;
 }
 
 const EditChannelModal: React.FC<EditChannelModalProps> = ({

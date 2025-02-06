@@ -30,23 +30,19 @@ const RegisterForm = () => {
     const [errMsg, setErrMsg] = useState("");
     const [success, setSuccess] = useState(false);
 
-    // check if username is valid
     useEffect(() => {
         setValidUsername(USER_REGEX.test(username));
     }, [username]);
 
-    // check if email is valid
     useEffect(() => {
         setValidEmail(MAIL_REGEX.test(email));
     }, [email]);
 
-    // check if password and repeat password are valid
     useEffect(() => {
         setValidPassword(PWD_REGEX.test(password));
         setValidRepeatPassword(password === repeatPassword);
     }, [password, repeatPassword]);
 
-    // clear error message
     useEffect(() => {
         setErrMsg("");
     }, [email, username, password, repeatPassword]);
@@ -58,7 +54,6 @@ const RegisterForm = () => {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
-        // incase JS hack check again if all data is valid
         const v1 = USER_REGEX.test(username);
         const v2 = MAIL_REGEX.test(email);
         const v3 = PWD_REGEX.test(password);
@@ -70,12 +65,11 @@ const RegisterForm = () => {
         try {
             await registerUser(username, email, password, repeatPassword);
             setSuccess(true);
-            // clear input fields
             setEmail("");
             setUsername("");
             setPassword("");
             setRepeatPassword("");
-            console.log("Register successful!");
+            //console.log("Register successful!");
         } catch (error: any) {
             if (!error?.response) {
                 setErrMsg("No server response. Please try again later.");

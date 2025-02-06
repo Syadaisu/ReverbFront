@@ -33,7 +33,7 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({ onClose, onUpload
       getUser(auth.accessToken, auth.userId)
                 .then((resp) => {
                     if (resp.data) {
-                      console.log("resp.data.avatarUuid: " + resp.data.avatarUuid);
+                      //console.log("resp.data.avatarUuid: " + resp.data.avatarUuid);
                         setAuth((prev) => ({
                             ...prev,
                             avatar: resp.data.avatarUuid

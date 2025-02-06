@@ -1,34 +1,32 @@
 // src/Components/Modals/DeleteServerConfirmation.tsx
 
 import React, { useState } from "react";
-import { deleteServer } from "../../Api/axios";
+import { deleteServer, leaveServer } from "../../Api/axios";
 import useAuth from "../../Hooks/useAuth";
-import { useStompContext } from "../../Hooks/useStompContext";
 
-interface DeleteServerConfirmationProps {
+interface LeaveServerConfirmationProps {
   serverId: number;
   serverName: string;
   onClose: () => void;
-  onDeleted?: () => void;
+  onLeft?: () => void;
 }
 
-const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
+const LeaveServerConfirmation: React.FC<LeaveServerConfirmationProps> = ({
   serverId,
   serverName,
   onClose,
-  onDeleted
+  onLeft
 }) => {
   const { auth } = useAuth();
   const [error, setError] = useState<string>("");
-  const stomp = useStompContext();
-  const handleDelete = async () => {
+  const handleLeave = async () => {
     setError("");
     try {
-      await deleteServer(auth.accessToken, serverId);
-      alert(`Server "${serverName}" deleted successfully!`);
+      await leaveServer(auth.accessToken,serverName,auth.userId);
+      alert(`Server "${serverName}" left successfully!`);
       onClose();
-      onDeleted && onDeleted();
-      stomp.deleteServerSignal(serverId);
+      onLeft && onLeft();
+      
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to delete server.");
     }
@@ -37,15 +35,15 @@ const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-gray-700 p-4 rounded w-96">
-        <h2 className="text-xl font-bold mb-4">Delete Server</h2>
-        <p>Are you sure you want to delete the server "{serverName}"?</p>
+        <h2 className="text-xl font-bold mb-4">Leave Server</h2>
+        <p>Are you sure you want to leave the server "{serverName}"?</p>
         {error && <p className="text-red-500 mt-2">{error}</p>}
         <div className="flex justify-end mt-4">
           <button
             className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded mr-2"
-            onClick={handleDelete}
+            onClick={handleLeave}
           >
-            Delete
+            Leave
           </button>
           <button
             className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded"
@@ -59,4 +57,4 @@ const DeleteServerConfirmation: React.FC<DeleteServerConfirmationProps> = ({
   );
 };
 
-export default DeleteServerConfirmation;
+export default LeaveServerConfirmation;

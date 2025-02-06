@@ -10,7 +10,7 @@ interface EditServerModalProps {
   currentName: string;
   currentDesc?: string;
   onClose: () => void;
-  onSuccess?: () => void; // optional callback to refresh server list
+  onSuccess?: () => void;
 }
 
 const EditServerModal: React.FC<EditServerModalProps> = ({

@@ -20,30 +20,26 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Toggle text <-> file attach mode
   const handleToggle = () => {
     setIsAttachingFile(!isAttachingFile);
     setSelectedFile(null);
     setInputValue("");
   };
 
-  // Called when user hits "Send"
   const handleSend = async () => {
-    const replyToId = replyParent?.id; // Parent message ID if replying
+    const replyToId = replyParent?.id;
 
     if (isAttachingFile && selectedFile) {
-      // In "file mode" and we have a file:
       onSendFile(selectedFile, replyToId);
       setSelectedFile(null);
       setIsAttachingFile(false);
-      clearReply(); // also clear the reply state
+      clearReply();
     } else {
-      // In text mode
       const trimmed = inputValue.trim();
       if (!trimmed) return;
       onSendText(trimmed, replyToId);
       setInputValue("");
-      clearReply(); // clear the reply state
+      clearReply();
     }
   };
 
@@ -51,7 +47,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
 
   return (
     <div className="p-2 bg-gray-700 flex flex-col gap-2">
-      {/* If replying to a message, show a small banner */}
       {replyParent && (
         <div className="bg-gray-600 p-1 text-sm text-gray-300 rounded flex justify-between items-center mb-1">
           <div>
@@ -71,7 +66,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
       )}
 
       <div className="flex items-center gap-2">
-        {/* Animated container for input */}
         <div
           className={`
             transition-all duration-300 ease-in-out flex items-center
@@ -79,7 +73,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
           `}
         >
           {isAttachingFile ? (
-            // File input mode
             <input
               ref={fileInputRef}
               type="file"
@@ -93,7 +86,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
                         cursor-pointer bg-gray-900 rounded-l outline-none w-full"
             />
           ) : (
-            // Text input mode
             <input
               type="text"
               className="p-2 bg-gray-900 outline-none text-white rounded-l w-full"
@@ -109,7 +101,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
           )}
         </div>
 
-        {/* Toggle mode button */}
         <button
           onClick={handleToggle}
           className={`
@@ -125,7 +116,6 @@ const ChatInputRow: React.FC<ChatInputRowProps> = ({
           {isAttachingFile ? "Text" : <MdAttachFile size={20} />}
         </button>
 
-        {/* Send Button */}
         <button
           onClick={handleSend}
           className="

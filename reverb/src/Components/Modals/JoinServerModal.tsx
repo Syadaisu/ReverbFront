@@ -6,7 +6,7 @@ import useAuth from "../../Hooks/useAuth";
 
 interface JoinServerModalProps {
   onClose: () => void;
-  onSuccess?: () => void; // Optional callback to refresh server list
+  onSuccess?: () => void;
 }
 
 const JoinServerModal: React.FC<JoinServerModalProps> = ({ onClose, onSuccess }) => {

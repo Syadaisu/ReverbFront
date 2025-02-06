@@ -22,10 +22,8 @@ const DeleteMessageConfirmation: React.FC<DeleteMessageConfirmationProps> = ({
   async function handleDelete() {
     setError("");
     try {
-        console.log("messageId: " + messageId);
-      // Call your axios method
+        //console.log("messageId: " + messageId);
       await deleteMessage(auth.accessToken, messageId);
-      // Optionally alert or toast
       onDeleted?.();
       stomp.deleteMessageSignal(messageId);
       onClose();

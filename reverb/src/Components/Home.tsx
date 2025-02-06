@@ -13,23 +13,19 @@ import UpdateAvatarModal from "./Modals/UpdateAvatarModal";
 const Home = () => {
   const { auth,logout } = useAuth();
 
-  // State for user dropdown modals
   const [showEditUser, setShowEditUser] = useState(false);
   const [showUpdateAvatar, setShowUpdateAvatar] = useState(false);
   const [refreshFlag, setRefreshFlag] = useState(0);
   const stomp = useStompContext();
-  // Toggle for user avatar dropdown
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     
     logout();
-    //Route to login page
-
-    console.log("Logging out...");
+    //console.log("Logging out...");
   }
 
-  // When avatar is updated, force a re-render by incrementing `refreshFlag`
   const handleAvatarUpdate = () => {
     setRefreshFlag((prev) => prev + 1);
   };
@@ -38,21 +34,17 @@ const Home = () => {
     handleAvatarUpdate();
   }, [auth]);
 
-  // Track which server/channel is selected
   const [selectedServerId, setSelectedServerId] = useState<number | null>(null);
   const [selectedChannelId, setSelectedChannelId] = useState<number | null>(null);
 
   return (
     <div className="w-screen h-screen flex bg-gray-800 text-white">
-      {/** MAIN AREA */}
       <div className="flex-grow flex flex-col">
-        {/** TOP BAR */}
         <div className="h-16 bg-gray-700 px-4 flex items-center justify-between">
           <div className="font-semibold text-lg">
             Welcome, {auth?.username}!
           </div>
 
-          {/** User Avatar + Dropdown */}
           <div className="relative pt-2">
             <button onClick={() => setUserMenuOpen(!userMenuOpen)}>
               <UserAvatar
@@ -85,7 +77,7 @@ const Home = () => {
                   className="block w-full text-left px-4 py-2 hover:bg-red-500"
                   onClick={() => {
                     handleLogout();
-                    console.log("Logging out...");
+                    //console.log("Logging out...");
                   }}
                   >
                   Logout
@@ -96,16 +88,13 @@ const Home = () => {
         </div>
 
         <div className="flex flex-grow overflow-hidden">
-          {/** LEFT SIDE: ServerBar (always visible) */}
           <ServerBar
             onSelectServer={(serverId: number) => {
-              // When user selects a server, reset channel to null
-              console.log("Selected server:", serverId); // debug check
+              //console.log("Selected server:", serverId); // debug check
               setSelectedServerId(serverId);
               setSelectedChannelId(null);
             }}
           />
-          {/** CHANNEL BAR */}
           {selectedServerId ? (
             <ChannelBar
               serverId={selectedServerId}
@@ -116,7 +105,6 @@ const Home = () => {
             </div>
           )}
 
-          {/** CHAT AREA */}
           <div className="flex-grow">
             {selectedChannelId ? (
               <ChatView 
@@ -133,8 +121,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-
-      {/** Modals */}
+      
       {showEditUser && <EditUserModal onClose={() => setShowEditUser(false)} />}
       {showUpdateAvatar && (
         <UpdateAvatarModal

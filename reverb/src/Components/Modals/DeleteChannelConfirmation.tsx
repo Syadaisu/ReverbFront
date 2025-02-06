@@ -8,7 +8,7 @@ interface DeleteChannelConfirmationProps {
   channelId: number;
   channelName: string;
   onClose: () => void;
-  onDeleted?: () => void; // callback to refresh channel list or remove from state
+  onDeleted?: () => void;
 }
 
 const DeleteChannelConfirmation: React.FC<DeleteChannelConfirmationProps> = ({

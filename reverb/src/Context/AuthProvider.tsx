@@ -28,7 +28,6 @@ const AuthContext = createContext<{
 });
 
 export const AuthProvider = ({ children }: { children: any }) => {
-  // Initialize auth state from localStorage
   const [auth, setAuth] = useState<AuthState>(() => {
     const stored = localStorage.getItem("auth");
     if (stored) {
@@ -47,17 +46,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
     localStorage.removeItem("auth");
   };
 
-  // On initial mount, re-hydrate from localStorage if available
-  /*useEffect(() => {
-    const stored = localStorage.getItem("auth");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Optionally validate parsed object structure
-      setAuth(parsed);
-    }
-  }, []);*/
-
-  // Additionally, whenever `auth` changes, update localStorage
   useEffect(() => {
     localStorage.setItem("auth", JSON.stringify(auth));
   }, [auth]);

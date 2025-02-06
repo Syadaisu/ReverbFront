@@ -13,7 +13,6 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path='home/*' element={<Home />} />
-            {/* Add other protected routes here */}
           </Route>
           
           <Route path='*' element={<Navigate to='/login' replace />} />

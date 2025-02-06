@@ -84,7 +84,7 @@ export const letterToColor: { [key: string]: string } = {
 export const ServerButton = ({ name, picture, refreshflag }: ServerButtonProps) => {
   var avatar = null;
   const cacheBuster = refreshflag;
-  console.log ("picture:", picture);
+  //console.log ("picture:", picture);
   if (picture !== undefined) {
     avatar = BASE_URL+AVATAR_URL+`${picture}?cb=${cacheBuster}`;
   }
@@ -119,7 +119,7 @@ export const ServerIcon = ({ name, picture, refreshflag }: ServerButtonProps) =>
     avatar = BASE_URL+AVATAR_URL+`${picture}?cb=${cacheBuster}`;
   }
 
-  console.log("picture:",avatar, picture);
+  //console.log("picture:",avatar, picture);
   return (
     <div
       className='group font-semibold relative flex items-center justify-center h-10 w-10 text-primary rounded-3xl duration-300'
@@ -135,7 +135,6 @@ export const ServerIcon = ({ name, picture, refreshflag }: ServerButtonProps) =>
   );
 };
 
-// technical buttons (join server, create server, etc.)
 export const IconButton = ({ icon, name }: IconButtonProps) => (
   <div className='font-semibold relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto bg-secondary group hover:bg-yellow-500 text-white hover:text-primary hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer'>
     {icon}
@@ -152,16 +151,15 @@ export const ChannelButton = ({ name }: { name: string }) => (
   </div>
 );
 
-// same as channel button but with dashed border
 export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
   const defaultColor = "#039be5";
   var avatar = null;
   const cacheBuster = refreshflag;
-  console.log(picture);
+  //console.log(picture);
   if (picture !== BASE_URL + AVATAR_URL + "undefined") {
     avatar = `${picture}?cb=${cacheBuster}`;
   }
-  console.log(avatar);
+  //console.log(avatar);
   let backgroundColor = defaultColor;
   if (name) {
     const firstLetter = name[0].toLowerCase();
@@ -181,10 +179,7 @@ export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
       ) : (
         <span className="text-lg font-semibold">{name ? name[0].toUpperCase() : ''}</span>
       )}
-
-      {/* Overlay on Hover */}
       <div className="absolute inset-0 bg-yellow-500 bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center rounded-full">
-        {/* Cog Icon */}
         <FaUserCog className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
     </div>
@@ -195,11 +190,11 @@ export const UserIcon = ({ name, picture, refreshflag }: UserAvatarProps) => {
   const defaultColor = "#039be5";
   var avatar = null;
   const cacheBuster = refreshflag;
-  console.log(picture);
+  //console.log(picture);
   if (picture !== BASE_URL + AVATAR_URL + "undefined") {
     avatar = `${picture}?cb=${cacheBuster}`;
   }
-  console.log(avatar);
+  //console.log(avatar);
   let backgroundColor = defaultColor;
   if (name) {
     const firstLetter = name[0].toLowerCase();

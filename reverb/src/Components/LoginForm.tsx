@@ -22,22 +22,17 @@ const LoginForm = () => {
         e.preventDefault();
         try {
           const response = await loginUser(email, password);
-          console.log(response);
-      
-          // response.data has { accessToken, refreshToken, user }
-          // user has { userId, userName, email, creationDate, avatar }
+          //console.log(response);
       
           const accessToken = response?.data?.accessToken;
           const refreshToken = response?.data?.refreshToken;
-          const user = response?.data?.user; // user is an object with userId, userName, etc.
+          const user = response?.data?.user;
           
-          // Now extract the fields from user
           const userId = user?.userId;
           const username = user?.userName;
           const avatar = user?.avatarUuid;
       
-          // If you want to store them in a single object:
-          console.log(user.userId, user.userName, user.email, user.creationDate, user.avatar);
+          //console.log(user.userId, user.userName, user.email, user.creationDate, user.avatar);
           setAuth({ userId, username, email, accessToken, avatar });
           localStorage.setItem(
             "auth",
@@ -45,7 +40,7 @@ const LoginForm = () => {
           );
       
           setSuccess(true);
-          console.log("Login successful!");
+          //console.log("Login successful!");
           
         } catch (error: any) {
           if (!error?.response) {

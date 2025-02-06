@@ -29,13 +29,11 @@ const UpdateServerIcon: React.FC<UpdateServerIconProps> = ({ onClose, onUploadSu
 
     setLoading(true);
     try {
-        console.log("serverId: ", serverId);
+        //console.log("serverId: ", serverId);
       await uploadServerIcon(auth.accessToken, serverId, iconFile);
 
       alert("Avatar updated successfully.");
       onUploadSuccess();
-      // Optionally update local user context with new avatar path or refresh
-      // e.g. setAuth({ ...auth, avatar: "some new avatar name" });
       stomp.editServerSignal(serverId);
       onClose();
     } catch (err: any) {

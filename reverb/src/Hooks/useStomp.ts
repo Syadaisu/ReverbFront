@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import SockJS from "sockjs-client";
 import { Client, StompSubscription, IMessage } from "@stomp/stompjs";
-import { get } from "http";
 
 interface ServerJoinedEvent {
   serverId: string;
@@ -56,17 +55,16 @@ export const useStomp = () => {
   const [connected, setConnected] = useState(false);
   const stompClientRef = useRef<Client | null>(null);
 
-  // Subscriptions references
   const subscriptionsRef = useRef<StompSubscription[]>([]);
 
   useEffect(() => {
-    const socket = new SockJS("http://localhost:8181/ws"); // Update with your backend URL
+    const socket = new SockJS("http://localhost:8181/ws");
     const stompClient = new Client({
       webSocketFactory: () => socket as unknown as WebSocket,
       reconnectDelay: 5000,
       onConnect: () => {
         setConnected(true);
-        console.log("Connected to STOMP server!");
+        //console.log("Connected to STOMP server!");
       },
       onStompError: (frame) => {
         console.error("Broker reported error: " + frame.headers["message"]);
@@ -74,7 +72,7 @@ export const useStomp = () => {
       },
       onWebSocketClose: () => {
         setConnected(false);
-        console.log("WebSocket connection closed");
+        //console.log("WebSocket connection closed");
       },
       onWebSocketError: (event) => {
         console.error("WebSocket error:", event);
@@ -89,7 +87,6 @@ export const useStomp = () => {
     };
   }, []);
 
-  // Publish helper
   const publish = useCallback((destination: string, body: any) => {
     if (stompClientRef.current && connected) {
       stompClientRef.current.publish({
@@ -101,7 +98,6 @@ export const useStomp = () => {
     }
   }, [connected]);
 
-  // Subscribe helper
   const subscribe = useCallback(
     (destination: string, callback: (msg: IMessage) => void) => {
       if (stompClientRef.current && connected) {
@@ -116,7 +112,6 @@ export const useStomp = () => {
     [connected]
   );
 
-  // Unsubscribe all on cleanup
   useEffect(() => {
     return () => {
       subscriptionsRef.current.forEach((sub) => sub.unsubscribe());
@@ -124,18 +119,17 @@ export const useStomp = () => {
     };
   }, []);
 
-  // Define publish methods
   const joinServer = (serverName: string, userId: string) => {
     publish("/app/joinServer", { serverName, userId });
   };
 
   const createChannel = (serverId: string, channelName: string, description?: string) => {
-    console.log("Creating channel with Name:", channelName, "Description:", description, "Server ID:", serverId);
+    //console.log("Creating channel with Name:", channelName, "Description:", description, "Server ID:", serverId);
     publish("/app/createChannel", { serverId, channelName, description });
   };
 
   const createServer = (serverName: string, ownerId: number, serverDescription?: string, ) => {
-    console.log("Creating server with Name:", serverName, "Description:", serverDescription, "User ID:", ownerId);
+    //console.log("Creating server with Name:", serverName, "Description:", serverDescription, "User ID:", ownerId);
     publish("/app/createServer", { serverName, serverDescription, ownerId });
   };
 
@@ -176,7 +170,7 @@ export const useStomp = () => {
   }
 
   const sendMessage = (channelId: number, authorId: number, body: string, attachmentUuid: string, replyToId: string) => {
-    console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid, "replyToId:", replyToId);
+    //console.log("Sending message channel:", channelId, "author:", authorId, "body:", body, "attachment:", attachmentUuid, "replyToId:", replyToId);
     publish("/app/addMessage", {
       channelId,
       authorId,
@@ -187,7 +181,6 @@ export const useStomp = () => {
     });
   };
 
-  // Define subscribe methods
   const onServerJoined = (callback: (event: ServerJoinedEvent) => void) => {
     const destination = "/topic/server.{serverId}.joined"; // Replace {serverId} dynamically
     return subscribe(destination, (msg) => {
@@ -206,7 +199,7 @@ export const useStomp = () => {
 
   const onChannelCreated = (serverId: string, callback: (event: ChannelCreatedEvent) => void) => {
     const destination = `/topic/server.channel.added`;
-    console.log("Subscribing to:", destination);
+    //console.log("Subscribing to:", destination);
     return subscribe(destination, (msg) => {
       const body = JSON.parse(msg.body) as ChannelCreatedEvent;
       callback(body);
@@ -231,7 +224,7 @@ export const useStomp = () => {
 
   const onMessageSent = (channelId: number, callback: (event: MessageProps) => void) => {
     const destination = `/topic/channel.${channelId}.message.added`;
-    console.log("Subscribing to:", destination);
+    //console.log("Subscribing to:", destination);
     return subscribe(destination, (msg) => {
       const body = JSON.parse(msg.body) as MessageProps;
       callback(body);

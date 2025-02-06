@@ -1,3 +1,5 @@
+// src/Components/ChatView.tsx
+
 import React, { useState, useEffect, useRef } from "react";
 import { useStomp, MessageProps } from "../Hooks/useStomp";
 import useAuth from "../Hooks/useAuth";
@@ -5,6 +7,8 @@ import {
   getChannel,
   getChannelMessages,
   getUser,
+  getServer,
+  getAdminsByIds,
   BASE_URL,
   AVATAR_URL,
   uploadFile,
@@ -13,8 +17,7 @@ import { UserIcon } from "./IconLib";
 import SearchBar from "./SearchBar";
 import ChatInputRow from "./ChatInputRow";
 import DeleteMessageConfirmation from "./Modals/DeleteMessageConfirmation";
-import { MdCancel } from "react-icons/md";
-import {FaReply, FaTrash} from "react-icons/fa";
+import { FaReply, FaTrash } from "react-icons/fa";
 
 interface ChannelInfo {
   channelId: number;
@@ -32,35 +35,43 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   const stomp = useStomp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Channel info
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | null>(null);
 
-  // Messages & user data
+  const [serverOwnerId, setServerOwnerId] = useState<number | null>(null);
+  const [authorizedUserIds, setAuthorizedUserIds] = useState<number[]>([]);
+
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [userList, setUserList] = useState<any[]>([]);
 
-  // Searching
   const [filteredMessages, setFilteredMessages] = useState<MessageProps[]>([]);
   const [searchValue, setSearchValue] = useState("");
 
-  // For forcing an <img> re-fetch if needed
   const [refreshIconFlag, setRefreshIconFlag] = useState(0);
 
-  // For the "Delete message" modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<MessageProps | null>(null);
 
- 
-  const [replyParent, setReplyParent] = useState<null | { id: string; body: string }>(null);
+  const [replyParent, setReplyParent] = useState<null | { id: string; body: string }>(
+    null
+  );
 
+  //Fetch info for the server and channel
+  useEffect(() => {
+    if (!auth?.accessToken || !serverId) return;
 
-  // ---------------------------
-  // 1) Fetch channel info & messages on mount or channel change
-  // ---------------------------
+    // Fetch server info (to get owner ID)
+    getServer(auth.accessToken, serverId)
+      .then((resp) => {
+        if (resp.data && resp.data.ownerId) {
+          setServerOwnerId(resp.data.ownerId);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch server info:", err));
+  }, [serverId, auth]);
+
   useEffect(() => {
     if (!channelId || !auth?.accessToken) return;
 
-    // Fetch channel info
     getChannel(auth.accessToken, channelId)
       .then((resp) => {
         if (resp.data) {
@@ -73,26 +84,35 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       })
       .catch((err) => console.error("Failed to fetch channel info:", err));
 
-    // Fetch channel messages
     getChannelMessages(auth.accessToken, channelId)
       .then((resp) => {
         if (Array.isArray(resp.data)) {
           setMessages(resp.data);
-          console.log("Fetched channel messages:", resp.data);
+          //console.log("Fetched channel messages:", resp.data);
         }
       })
       .catch((err) => console.error("Failed to fetch channel messages:", err));
-
   }, [channelId, auth]);
 
-  // ---------------------------
-  // 2) For each message, fetch user info if not in userList
-  // ---------------------------
+  //Fetch authorized users
+  useEffect(() => {
+    if (!auth?.accessToken || !serverId) return;
+
+    getAdminsByIds(auth.accessToken, serverId)
+      .then((resp) => {
+        if (Array.isArray(resp.data)) {
+          setAuthorizedUserIds(resp.data as number[]);
+        } else {
+          setAuthorizedUserIds([]);
+        }
+      })
+      .catch((error) => console.error("Error fetching authorized users:", error));
+  }, [auth, serverId]);
+
   useEffect(() => {
     if (!auth?.accessToken || messages.length === 0) return;
 
     const existingUserIds = new Set(userList.map((u) => u.userId));
-    // unique authorIds not in userList
     const userIdsToFetch = Array.from(
       new Set(
         messages
@@ -103,7 +123,6 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
 
     if (userIdsToFetch.length === 0) return;
 
-    // fetch all missing user records in parallel
     const userFetchPromises = userIdsToFetch.map((userId) =>
       getUser(auth.accessToken, Number(userId))
         .then((r) => r.data)
@@ -120,15 +139,13 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       .catch((error) => console.error("Error fetching user batch:", error));
   }, [messages, auth, userList]);
 
-  // ---------------------------
-  // 3) WebSocket logic: user edited signals, message-sent signals, etc.
-  // ---------------------------
-  useEffect(() => {
-    if (!stomp || !stomp.connected) return;
+  const stompConnected = !!(stomp && stomp.connected);
 
-    // minimal user-edited signal
+  useEffect(() => {
+    if (!stompConnected) return;
+
     const subEditUser = stomp.onUserEditedSignal((data) => {
-      console.log("Received user.edited signal:", data);
+      //console.log("Received user.edited signal:", data);
       getUser(auth.accessToken, data.userId)
         .then((resp) => {
           const updatedUser = resp.data;
@@ -144,7 +161,6 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
         })
         .catch(console.error);
 
-      // If we want to force <img> re-fetch
       setRefreshIconFlag((x) => x + 1);
     });
 
@@ -166,7 +182,7 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     });
 
     const subMessageDeleted = stomp.onMessageDeletedSignal((data) => {
-      console.log("Received message.deleted signal:", data);
+      //console.log("Received message.deleted signal:", data);
       setMessages((prev) => prev.filter((m) => m.messageId !== data.messageId));
     });
 
@@ -175,11 +191,10 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
       subChannelEdited?.unsubscribe();
       subMessageDeleted?.unsubscribe();
     };
-  }, [stomp, auth]);
+  }, [stompConnected, stomp, auth, channelId]);
 
-  // Subscribe to new messages in real-time
   useEffect(() => {
-    if (!stomp || !stomp.connected || !channelId) return;
+    if (!stompConnected || !channelId) return;
     const subMsg = stomp.onMessageSent(channelId, (newMsg) => {
       if (newMsg) {
         setMessages((prev) => [...prev, newMsg]);
@@ -188,18 +203,12 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     return () => {
       subMsg?.unsubscribe();
     };
-  }, [stomp, channelId]);
+  }, [stompConnected, stomp, channelId]);
 
-  // ---------------------------
-  // 4) Scroll to bottom on messages update
-  // ---------------------------
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ---------------------------
-  // 5) Searching 
-  // ---------------------------
   function handleFilterMessage(e: React.ChangeEvent<HTMLInputElement>) {
     const search = e.target.value;
     setSearchValue(search);
@@ -222,29 +231,23 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     setReplyParent({ id: msg.messageId, body: msg.body });
   }
 
-  // ---------------------------
-  // 6) Deleting a message
-  // ---------------------------
   const openDeleteModal = (msg: MessageProps) => {
     setMessageToDelete(msg);
-    console.log("Opening delete modal for message:", msg, "delete message id:", messageToDelete?.messageId);
     setShowDeleteModal(true);
   };
 
   const handleDeletedMessage = () => {
-    // Remove from local state
     if (!messageToDelete) return;
-    setMessages((prev) => prev.filter((m) => m.messageId !== messageToDelete.messageId));
+    setMessages((prev) =>
+      prev.filter((m) => m.messageId !== messageToDelete.messageId)
+    );
   };
 
-  // ---------------------------
-  // 7) Sending text or file
-  // ---------------------------
-  const handleSendText = (text: string, replyId? : string) => {
+  const handleSendText = (text: string, replyId?: string) => {
     stomp.sendMessage(channelId, auth.userId, text, "", replyParent?.id || "");
   };
 
-  const handleSendFile = async (file: File,replyId? : string) => {
+  const handleSendFile = async (file: File, replyId?: string) => {
     try {
       const resp = await uploadFile(auth.accessToken, file);
       const attachmentUuid = resp.data;
@@ -254,18 +257,16 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
     }
   };
 
-  // ---------------------------
-  // Render
-  // ---------------------------
   return (
     <div className="flex flex-col h-full">
-      {/* Channel Header + Search */}
       <div className="flex items-center justify-between bg-gray-900 p-4 border-y border-gray-700">
         {channelInfo && (
           <div>
             <h2 className="text-2xl font-bold">{channelInfo.channelName}</h2>
             {channelInfo.channelDescription && (
-              <p className="text-sm text-gray-300 mt-1">{channelInfo.channelDescription}</p>
+              <p className="text-sm text-gray-300 mt-1">
+                {channelInfo.channelDescription}
+              </p>
             )}
           </div>
         )}
@@ -276,63 +277,65 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
         />
       </div>
 
-      {/* Messages list */}
       <div className="flex-grow overflow-y-auto bg-gray-800 p-3 space-y-2">
         {(searchValue ? filteredMessages : messages).length > 0 ? (
           (searchValue ? filteredMessages : messages).map((msg) => {
             const user = userList.find((u) => u.userId === msg.authorId);
-            const isAuthor = (auth.userId === Number(msg.authorId));
+
+            const isAuthor = auth.userId === Number(msg.authorId);
+
+            const isOwner = serverOwnerId === auth.userId;
+
+            const isAdmin = authorizedUserIds.includes(auth.userId);
+
+            const canDelete = isAuthor || isOwner || isAdmin;
 
             return (
               <div key={msg.messageId} className="mb-4">
-                {msg.responseToId  && (
-                <ParentSnippet replyToId={msg.responseToId} messages={messages} />
+                {msg.responseToId && (
+                  <ParentSnippet replyToId={msg.responseToId} messages={messages} />
                 )}
-                <div className="relative bg-gray-700 p-2 rounded flex items-start ">
-                {/* Avatar */}
-                {user ? (
-                  <UserIcon
-                    name={user.userName}
-                    picture={`${BASE_URL + AVATAR_URL + user.avatarUuid}`}
-                    refreshflag={refreshIconFlag}
-                  />
-                ) : (
-                  <UserIcon name="Unknown User" />
-                )}
+                <div className="relative bg-gray-700 p-2 rounded flex items-start">
+                  {user ? (
+                    <UserIcon
+                      name={user.userName}
+                      picture={`${BASE_URL + AVATAR_URL + user.avatarUuid}`}
+                      refreshflag={refreshIconFlag}
+                    />
+                  ) : (
+                    <UserIcon name="Unknown User" />
+                  )}
 
-                {/* Message text or image */}
-                <div className="ml-2">
-                  <div className="flex items-center">
-                    
-                    <span className="font-bold text-white mr-2">
-                      {user ? user.userName : "Unknown User"}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(msg.creationDate).toLocaleString()}
-                    </span>
+                  <div className="ml-2">
+                    <div className="flex items-center">
+                      <span className="font-bold text-white mr-2">
+                        {user ? user.userName : "Unknown User"}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(msg.creationDate).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="text-gray-200">{renderMessageContent(msg)}</div>
                   </div>
-                  <div className="text-gray-200">{renderMessageContent(msg)}</div>
+
+                  <div className="absolute top-2 right-2 flex items-center space-x-3">
+                    {canDelete && (
+                      <button
+                        className="text-gray-400 hover:text-red-500"
+                        title="Delete message"
+                        onClick={() => openDeleteModal(msg)}
+                      >
+                        <FaTrash size={15} />
+                      </button>
+                    )}
+                    <button
+                      className="ml-auto text-xs text-gray-400 hover:text-yellow-500"
+                      onClick={() => handleReplyClick(msg)}
+                    >
+                      <FaReply size={15} />
+                    </button>
+                  </div>
                 </div>
-                <div className="absolute top-2 right-2 flex items-center space-x-3">
-                {/* Show "Delete" button if author */}
-                {isAuthor && (
-                  <button
-                    className="text-gray-400 hover:text-red-500"
-                    title="Delete message"
-                    onClick={() => openDeleteModal(msg)}
-                  >
-                    <FaTrash size={15} />
-                  </button>
-                )}
-                {/* Reply button */}
-                <button
-                className="ml-auto text-xs text-gray-400 hover:text-yellow-500"
-                onClick={() => handleReplyClick(msg)}
-              >
-                <FaReply size={15}/>
-              </button>
-              </div>
-              </div>
               </div>
             );
           })
@@ -344,21 +347,17 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat input row */}
       <ChatInputRow
-      onSendText={(text, replyId) => {
-        handleSendText(text, replyId);
-        // your code to send text message with optional replyId
-      }}
-      onSendFile={(file, replyId) => {
-        handleSendFile(file, replyId);
-        // your code to send file with optional replyId
-      }}
-      replyParent={replyParent}
-      clearReply={() => setReplyParent(null)}
-    />
+        onSendText={(text, replyId) => {
+          handleSendText(text, replyId);
+        }}
+        onSendFile={(file, replyId) => {
+          handleSendFile(file, replyId);
+        }}
+        replyParent={replyParent}
+        clearReply={() => setReplyParent(null)}
+      />
 
-      {/* Delete Message Confirmation Modal */}
       {showDeleteModal && messageToDelete && (
         <DeleteMessageConfirmation
           messageId={messageToDelete.messageId}
@@ -370,7 +369,6 @@ const ChatView: React.FC<ChatViewProps> = ({ serverId, channelId }) => {
   );
 };
 
-/** Renders either text body or attached image */
 function renderMessageContent(msg: MessageProps) {
   if (msg.body && msg.body.trim()) {
     return <>{msg.body}</>;
@@ -405,7 +403,6 @@ function ParentSnippet({
     );
   }
 
-  // Evaluate parent's content
   const isAttachmentOnly =
     (!parent.body || !parent.body.trim()) && parent.attachmentUuid;
 
@@ -418,6 +415,5 @@ function ParentSnippet({
     </div>
   );
 }
-
 
 export default ChatView;

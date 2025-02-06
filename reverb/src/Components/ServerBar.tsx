@@ -6,22 +6,23 @@ import { useStomp } from "../Hooks/useStomp";
 
 import EditServerModal from "./Modals/EditServerModal";
 import DeleteServerConfirmation from "./Modals/DeleteServerConfirmation";
+import LeaveServerConfirmation from "./Modals/LeaveServerConfirmation";
 import UpdateServerIcon from "./Modals/UpdateServerIcon";
-import GrantAuthoritiesModal from "./Modals/GrantAuthoritiesModal";
+import AuthoritiesModal from "./Modals/AuthoritiesModal";
 
-import CreateServerModal from "./Modals/CreateServerModal"; // New import
-import JoinServerModal from "./Modals/JoinServerModal"; // New import
+import CreateServerModal from "./Modals/CreateServerModal";
+import JoinServerModal from "./Modals/JoinServerModal";
 
 import { FaLink, FaPlus } from "react-icons/fa6";
 
-import ServerDropdown from "./ServerDropdown"; // Import the new Dropdown component
+import ServerDropdown from "./ServerDropdown";
 
 interface ServerData {
   id: number;
   name: string;
   description?: string;
   serverIconUuid?: string;
-  ownerId?: number; // to know who the owner is
+  ownerId?: number;
 }
 
 interface ServerBarProps {
@@ -35,15 +36,14 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
   const [servers, setServers] = useState<ServerData[]>([]);
   const [authorizedMap, setAuthorizedMap] = useState<{ [key: number]: number[] }>({});
 
-  // CREATE / JOIN
   const [showCreateServer, setShowCreateServer] = useState(false);
   const [showJoinServer, setShowJoinServer] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
-  // EDIT / DELETE / ICON / GRANT
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showIconUploadModal, setShowIconUploadModal] = useState(false);
-  const [showGrantModal, setShowGrantModal] = useState(false);
+  const [showAuthoritiesModal, setShowAuthoritiesModal] = useState(false);
 
   const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
 
@@ -54,12 +54,9 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
 
   const [refreshIconFlag, setRefreshIconFlag] = useState(0);
 
-  // Ref to store the button elements for positioning the dropdown
   const buttonRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
 
-  // ---------------------------
-  // 1) Fetch user servers
-  // ---------------------------
+  //Fetch user servers
   useEffect(() => {
     if (!auth?.accessToken) return;
     getUserServers(auth.accessToken, auth.userId)
@@ -78,18 +75,15 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
       .catch(console.error);
   }, [auth]);
 
-  // ---------------------------
-  // 2) For each server, fetch its authorized user IDs
-  // ---------------------------
+  //Fetch authorized users for each server
   useEffect(() => {
     if (!auth?.accessToken) return;
-    if (servers.length === 0) return; // no servers yet
+    if (servers.length === 0) return;
 
     const fetchAll = async () => {
       try {
         const newMap: { [key: number]: number[] } = {};
         for (const srv of servers) {
-          // getAdminsByIds returns an array of userIds, presumably
           const resp = await getAdminsByIds(auth.accessToken, srv.id);
           if (Array.isArray(resp.data)) {
             newMap[srv.id] = resp.data;
@@ -106,12 +100,11 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
     fetchAll();
   }, [servers, auth]);
 
-  // Subscribe to real-time “server edited” events
   useEffect(() => {
     if (!stomp || !stomp.connected) return;
     
     const editSub = stomp.onServerEditedSignal((data) => {
-      console.log("Server edited signal received:", data);
+      //console.log("Server edited signal received:", data);
       refetchServers();
      
       setRefreshIconFlag((prev) => prev + 1);
@@ -122,7 +115,6 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
 
   }, [stomp]);
 
-  // Helper to re-fetch servers & authorized users
   const refetchServers = () => {
     if (!auth?.accessToken) return;
     getUserServers(auth.accessToken, auth.userId)
@@ -140,45 +132,43 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         }
       })
       .catch(console.error);
-    // After we re-fetch servers, useEffect for "servers" 
-    // will again fetch authorizedMap. 
   };
 
-  // EDIT server
   const handleOpenEdit = (server: ServerData) => {
-    console.log("handleOpenEdit called with", server);
+    //console.log("handleOpenEdit called with", server);
     setSelectedServer(server);
     setShowEditModal(true);
   };
 
-  // CHANGE ICON
   const handleIconUpload = (server: ServerData) => {
-    console.log("handleIconUpload called with", server);
+    //console.log("handleIconUpload called with", server);
     setSelectedServer(server);
     setShowIconUploadModal(true);
   };
 
-  // DELETE server
   const handleOpenDelete = (server: ServerData) => {
-    console.log("handleOpenDelete called with", server);
+    //console.log("handleOpenDelete called with", server);
     setSelectedServer(server);
     setShowDeleteModal(true);
   };
 
-  // GRANT authorities
-  const handleOpenGrant = (server: ServerData) => {
-    console.log("handleOpenGrant called with", server);
+  const handleOpenAuthorities = (server: ServerData) => {
+    //console.log("handleOpenAuthorities called with", server);
     setSelectedServer(server);
-    setShowGrantModal(true);
+    setShowAuthoritiesModal(true);
   };
 
-  // Toggle which server's dropdown is open
+  const handleLeaveServer = (server: ServerData) => {
+    //console.log("handleLeaveServer called with", server);
+    setSelectedServer(server);
+    setShowLeaveModal(true);
+  };
+
   const toggleServerDropdown = (server: ServerData, event: React.MouseEvent) => {
-    event.preventDefault(); // Prevent default context menu
+    event.preventDefault();
     if (dropdownState && dropdownState.server.id === server.id) {
-      setDropdownState(null); // Close if already open
+      setDropdownState(null);
     } else {
-      // Get the button's position
       const button = buttonRefs.current[server.id];
       if (button) {
         const rect = button.getBoundingClientRect();
@@ -193,9 +183,8 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
     }
   };
 
-  // Handle closing the dropdown
   const handleCloseDropdown = () => {
-    console.log("handleCloseDropdown called");
+    //console.log("handleCloseDropdown called");
     setDropdownState(null);
   };
 
@@ -204,17 +193,13 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
       className="relative flex flex-col items-center bg-gray-900 border-y border-gray-700 p-2"
       style={{ width: "4.5rem" }}
     >
-      {/* Scrollable Server List */}
-      <div className="flex-1 w-full overflow-y-scroll overflow-x-visible mb-4 pr-2">
+      <div className="flex-1 w-full overflow-y-scroll mb-4 pr-2">
         {servers.map((srv) => {
-          // Determine if current user is the owner
           const isOwner = srv.ownerId === auth.userId;
 
-          // Determine if user is in the authorized list for this server
           const userIds = authorizedMap[srv.id] || [];
           const isAuthorized = userIds.includes(auth.userId);
 
-          // If user is owner or authorized, can do Edit & Icon changes
           const canEdit = isOwner || isAuthorized;
           
           return (
@@ -222,7 +207,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
               <button
                 ref={(el) => (buttonRefs.current[srv.id] = el)}
                 onClick={() => {
-                  console.log(`Server ${srv.name} selected`);
+                  //console.log(`Server ${srv.name} selected`);
                   onSelectServer?.(srv.id);
                 }}
                 onContextMenu={(e) => toggleServerDropdown(srv, e)}
@@ -234,7 +219,6 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         })}
       </div>
 
-      {/* Dropdown for the selected server */}
       {dropdownState && (
         <ServerDropdown
           server={dropdownState.server}
@@ -243,7 +227,8 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
           onEdit={handleOpenEdit}
           onDelete={handleOpenDelete}
           onChangeIcon={handleIconUpload}
-          onGrantAuthorities={handleOpenGrant}
+          onAuthorities={handleOpenAuthorities}
+          onLeaveServer={handleLeaveServer}
           canEdit={
             dropdownState.server.ownerId === auth.userId ||
             (authorizedMap[dropdownState.server.id] || []).includes(auth.userId)
@@ -252,17 +237,15 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* “Create Server” button */}
       <div onClick={() => setShowCreateServer(true)} className="mt-2">
         <IconButton icon={<FaPlus size="17" />} name="Create Server" />
       </div>
-
-      {/* “Join Server” button */}
+      
       <div onClick={() => setShowJoinServer(true)} className="mt-2">
         <IconButton icon={<FaLink size="18" />} name="Join Server" />
       </div>
 
-      {/* CREATE SERVER MODAL */}
+      {/*create server*/}
       {showCreateServer && (
         <CreateServerModal
           onClose={() => setShowCreateServer(false)}
@@ -270,7 +253,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* JOIN SERVER MODAL */}
+      {/*join server*/}
       {showJoinServer && (
         <JoinServerModal
           onClose={() => setShowJoinServer(false)}
@@ -278,7 +261,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* EDIT SERVER MODAL */}
+      {/*edit server*/}
       {showEditModal && selectedServer && (
         <EditServerModal
           serverId={selectedServer.id}
@@ -289,7 +272,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* UPLOAD SERVER ICON MODAL */}
+      {/*upload server icon*/}
       {showIconUploadModal && selectedServer && (
         <UpdateServerIcon
           serverId={selectedServer.id}
@@ -298,7 +281,7 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* DELETE SERVER CONFIRMATION */}
+      {/*delete server*/}
       {showDeleteModal && selectedServer && (
         <DeleteServerConfirmation
           serverId={selectedServer.id}
@@ -308,12 +291,23 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
         />
       )}
 
-      {/* GRANT AUTHORITIES MODAL */}
-      {showGrantModal && selectedServer && (
-        <GrantAuthoritiesModal
+      {/*leave server*/}
+      {showLeaveModal && selectedServer && (
+        <LeaveServerConfirmation
           serverId={selectedServer.id}
-          onClose={() => setShowGrantModal(false)}
-          onGranted={refetchServers}
+          serverName={selectedServer.name}
+          onClose={() => setShowLeaveModal(false)}
+          onLeft={refetchServers}
+        />
+      )}
+
+      {/*authorities*/}
+      {showAuthoritiesModal && selectedServer && (
+        <AuthoritiesModal
+          serverId={selectedServer.id}
+          serverName={selectedServer.name}
+          onClose={() => setShowAuthoritiesModal(false)}
+          onAuthorities={refetchServers}
         />
       )}
     </div>
