@@ -168,7 +168,8 @@ export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
 
   return (
     <div
-      className="group relative flex items-center justify-center h-12 w-12 text-primary rounded-full transition-all duration-300 ease-linear cursor-pointer"
+      className="group relative flex items-center justify-center h-12 w-12 text-primary 
+        rounded-full transition-all duration-300 ease-linear cursor-pointer"
       style={{ backgroundColor }}
     >
       {avatar ? (
@@ -179,8 +180,10 @@ export const UserAvatar = ({ name, picture, refreshflag }: UserAvatarProps) => {
       ) : (
         <span className="text-lg font-semibold">{name ? name[0].toUpperCase() : ''}</span>
       )}
-      <div className="absolute inset-0 bg-yellow-500 bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center rounded-full">
-        <FaUserCog className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-yellow-500 bg-opacity-0 group-hover:bg-opacity-50 
+          transition-opacity duration-300 flex items-center justify-center rounded-full">
+        <FaUserCog className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 
+            transition-opacity duration-300" />
       </div>
     </div>
   );

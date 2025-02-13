@@ -73,7 +73,7 @@ const RegisterForm = () => {
         } catch (error: any) {
             if (!error?.response) {
                 setErrMsg("No server response. Please try again later.");
-            } else if (error.response?.status === 500) {
+            } else if (error.response?.status === 400) {
                 setErrMsg("E-mail or username is already taken!");
             } else {
                 setErrMsg("Something went wrong. Please try again later.");

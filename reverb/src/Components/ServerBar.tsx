@@ -3,6 +3,7 @@ import { ServerButton, IconButton } from "./IconLib";
 import { getUserServers, getAdminsByIds } from "../Api/axios"; 
 import useAuth from "../Hooks/useAuth";
 import { useStomp } from "../Hooks/useStomp";
+import { useTitle } from "../Hooks/useTitle";
 
 import EditServerModal from "./Modals/EditServerModal";
 import DeleteServerConfirmation from "./Modals/DeleteServerConfirmation";
@@ -182,6 +183,8 @@ const ServerBar: React.FC<ServerBarProps> = ({ onSelectServer }) => {
       }
     }
   };
+
+  useTitle("ReverbApp");
 
   const handleCloseDropdown = () => {
     //console.log("handleCloseDropdown called");
